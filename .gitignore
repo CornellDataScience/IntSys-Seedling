@@ -1,3 +1,5 @@
 data/
+balanced/
+balanced_pickle/
 *checkpoint*.ipynb
 PyTorch Tutorial

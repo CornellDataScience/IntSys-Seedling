@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 import numpy as np # linear algebra
 import random
@@ -8,7 +7,7 @@ from keras.layers import Dense, Flatten, Input, Softmax, LeakyReLU
 from keras.models import Model
 from keras import optimizers
 from keras.initializers import RandomUniform
-# GENERATING TRAINING DATA 
+# GENERATING TRAINING DATA
 from PIL import Image
 import cv2
 from pathlib import Path
@@ -26,7 +25,7 @@ def create_data(catCnt):
     catImgCnt = [335, 454, 349, 717, 259, 544, 806, 261, 609, 277, 581, 465]
     #cwd = os.getcwd()
     #dataLoc = ".\\data"
-    
+
     for i in range (catCnt):
         catNumber = random.randint(0,len(catNames)-1)
         catName = catNames[catNumber]
@@ -36,14 +35,14 @@ def create_data(catCnt):
         pathImg = os.path.join("IntSys-Seedling\\data",catName,imgLoc)
         path = Path(pathImg)
         if(path.is_file()):
-            
+
             im_frame = cv2.imread(pathImg)
             if im_frame is not None:
                 #resizing the image to 224, 224.  This is a basic solution to the issue to varying image size
                 h, w = 224, 224
                 res_im = cv2.resize(im_frame, (w,h), interpolation=cv2.INTER_LINEAR)
                 img.append(res_im)
-                target.append(tv) 
+                target.append(tv)
     return img, target
 
 #input layer description + creation
@@ -57,7 +56,7 @@ def create_resnet_layers( in_layer, freeze):
         cntr += 1
     cnn = (res)(in_layer)
     flat = Flatten()(cnn)
-    
+
     den_1 = Dense(50, kernel_initializer = RAND, name = 'den_1')(flat)
     relu_ff_1 = LeakyReLU(ALPHA, name = 'relu_ff_1')(den_1)
     den_2 = Dense(12, kernel_initializer = RAND, name = 'den_2')(relu_ff_1)
@@ -92,5 +91,3 @@ def train_baselineRes(freeze, p, cnt):
     #    loss, acc = model.evaluate(x=np.array(testImg), y=np.array(testTarget), verbose=1)
     #print(loss, "\n", acc)
     model.save_weights('resBaseLine.h5')
-        
-

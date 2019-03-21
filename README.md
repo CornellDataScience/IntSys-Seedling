@@ -1,7 +1,7 @@
 # Seedling Classification 
 Creating a mobile application to classify maize seedlings and 11 different types of weed seedlings that are usually found growing in maize plots.  
 
-Team Members: Katie Yang, Cora Wu, Jenna Kressin, Joe Campbell
+Team Members: Katie Yang, Cora Wu, Jenna Kressin, Joe Campbell, [Brandon Kates](https://github.com/BrandonKates)
 
 Our project will include:
  * Classification Model

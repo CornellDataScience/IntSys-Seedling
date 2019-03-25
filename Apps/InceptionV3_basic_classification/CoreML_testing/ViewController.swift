@@ -31,11 +31,9 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     @IBAction func camera(_ sender: Any) {
-        
         if !UIImagePickerController.isSourceTypeAvailable(.camera) {
             return
         }
-        
         let cameraPicker = UIImagePickerController()
         cameraPicker.delegate = self
         cameraPicker.sourceType = .camera
@@ -66,6 +64,8 @@ extension ViewController: UIImagePickerControllerDelegate {
         guard let image = info["UIImagePickerControllerOriginalImage"] as? UIImage else {
             return
         }
+            
+        print(image.size)
         
         UIGraphicsBeginImageContextWithOptions(CGSize(width: 299, height: 299), true, 2.0)
         image.draw(in: CGRect(x: 0, y: 0, width: 299, height: 299))

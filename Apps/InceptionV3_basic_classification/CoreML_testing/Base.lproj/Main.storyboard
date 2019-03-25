@@ -40,13 +40,12 @@
                     <navigationItem key="navigationItem" title="Core ML" id="fU4-g6-4f6">
                         <barButtonItem key="leftBarButtonItem" systemItem="camera" id="plg-Tp-YjE">
                             <connections>
-                                <action selector="camera:" destination="BYZ-38-t0r" id="alb-oJ-TjM"/>
-                                <segue destination="BYZ-38-t0r" kind="showDetail" id="kWm-CM-F6z"/>
+                                <action selector="camera:" destination="BYZ-38-t0r" id="9nM-dH-bNt"/>
                             </connections>
                         </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" title="Library" id="BOW-z2-X1R">
                             <connections>
-                                <action selector="openLibrary:" destination="BYZ-38-t0r" id="2tG-Zs-a8Z"/>
+                                <action selector="openLibrary:" destination="BYZ-38-t0r" id="P70-zS-gkQ"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

@@ -45,7 +45,7 @@ def create_dataloaders():
     trainY = pickle.load(open(os.path.join(data_path, "trainY_128" ), "rb"))
     validX = pickle.load(open(os.path.join(data_path, "validX_128" ), "rb"))
     validY = pickle.load(open(os.path.join(data_path, "validY_128" ), "rb"))
-    
+
     #generate data from the pickled np datasets,transforming to torch tensors
     trainX = np.transpose(trainX, (0,3,2,1))
     validX = np.transpose(validX, (0,3,2,1))
@@ -70,37 +70,35 @@ def train_model(model):
     model.train()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
     if torch.cuda.is_available():
         device = torch.device("cuda")
         model.cuda()
     
     (t_loader, v_loader) = create_dataloaders()
     
-    epochs = 3
+    epochs = 50
     steps = 0
     #train_losses, test_losses = [], []
     
     for epoch in range (epochs):
-        print('Epoch{}/{}.'.format(epoch, epochs-1))
+        print('Epoch{}/{}.'.format(epoch, epochs))
         print('-' * 10)
         
         running_loss = 0.0
+        running_corrects = 0.0
+        running_valid_corrects = 0.0
         
-        
+        #train on each epoch
         tl = next(iter(t_loader))
         for i, (inputs, labels) in enumerate(tl):
-            #inputs= inputs.to(device)
-            #labels = labels.to(device)
-            
             steps +=1
             
             #clears the gradients of all optimized tensors
             optimizer.zero_grad()
             
             #forwards + backwards + optimize
-            outputs = model(inputs)
-            #_, preds = torch.max(outputs, 1)
+            outputs = model.forward(inputs)
+            _, preds = torch.max(outputs, 1)
             loss = criterion(preds, torch.max(labels, 1)[1])
             print('train-loss', loss.item(),end=' ')
             loss.backward()
@@ -109,21 +107,37 @@ def train_model(model):
             # print statistics
             running_loss += loss.item()
             running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
-            print(running_corrects/1)
-            
-            
+
+            #print(torch.sum(preds == torch.max(labels, 1)[1]))
+        
+            #print('ok;')
         epoch_loss = running_loss/(TRAIN_SIZE)
         epoch_acc = running_corrects.double() / (TRAIN_SIZE)
         
+        #validate on each epoch
         vl = next(iter(v_loader))
-        for j, (inputs, labels) in enumerate(vl):
+        for j, (vinputs, vlabels) in enumerate(vl):
+            vinputs= vinputs.to(device)
+            vlabels = vlabels.to(device)
+            
+            #forward 
+            voutputs = model.forward(vinputs)
+            _, vpreds = torch.max(voutputs, 1)
+            running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+            #print(torch.sum(preds == torch.max(labels, 1)[1]))
         
-        print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc.double()))
+            #print('ok;')
+            
+        valid_acc = running_valid_corrects.double() / (VALID_SIZE)
+        
+        print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc))
+        #print(running_corrects)
             
         print()
     
     #save the model
-    torch.save(model.state_dict(),".")
+
+    torch.save(model.state_dict(), "modelRes")
     
     # While iterating over the dataset do training
    

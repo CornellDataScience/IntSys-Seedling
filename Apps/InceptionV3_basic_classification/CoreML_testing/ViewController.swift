@@ -14,7 +14,14 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var classifier: UILabel!
     
+    let mainColor = UIColor(red: 88/255.0, green: 196/255.0, blue: 91/255.0, alpha: 1.0)
+    let lightColor = UIColor(red: 215.0/255.0, green: 235.0/255.0, blue: 202.0/255.0, alpha: 1.0)
+    
     var model: Inceptionv3!
+    
+    var appTitleLabel =  UILabel()
+    var CDSLabel =  UILabel()
+    var introductionText = UITextView()
     
     override func viewWillAppear(_ animated: Bool) {
         model = Inceptionv3()
@@ -22,7 +29,61 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        view.backgroundColor = .white
+        
+        appTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        appTitleLabel.text = "Seedlings Classifier"
+        appTitleLabel.backgroundColor = .white
+        appTitleLabel.font = UIFont.systemFont(ofSize: 40, weight: .bold)
+        appTitleLabel.textAlignment = .left
+        appTitleLabel.textColor = .black
+        view.addSubview(appTitleLabel)
+        
+        CDSLabel.translatesAutoresizingMaskIntoConstraints = false
+        CDSLabel.text = "Cornell Data Science"
+        CDSLabel.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        CDSLabel.textAlignment = .left
+        CDSLabel.backgroundColor = .white
+        CDSLabel.textColor = mainColor
+        view.addSubview(CDSLabel)
+        
+        var introduction: String
+        introduction = "Welcome!\n- To take a photo, press on the camera icon on the top right.\n" +
+        "- To choose a photo from your library, press on the Library button on the top left."
+        introductionText.translatesAutoresizingMaskIntoConstraints = false
+        introductionText.isEditable = false
+        introductionText.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        introductionText.textColor = .black
+        introductionText.backgroundColor = .white
+        introductionText.text = introduction
+        view.addSubview(introductionText)
+        
+        setUpConstraints()
+    }
+    
+    func setUpConstraints() {
+        NSLayoutConstraint.activate([
+            appTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30),
+            appTitleLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            appTitleLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            appTitleLabel.heightAnchor.constraint(equalToConstant: 45)
+            ])
+        NSLayoutConstraint.activate([
+            CDSLabel.topAnchor.constraint(equalTo: appTitleLabel.bottomAnchor),
+            CDSLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            CDSLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            CDSLabel.heightAnchor.constraint(equalToConstant: 20)
+            ])
+        NSLayoutConstraint.activate([
+            introductionText.topAnchor.constraint(equalTo: CDSLabel.bottomAnchor, constant: 20),
+            introductionText.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            introductionText.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            introductionText.heightAnchor.constraint(equalToConstant: 100)
+            ])
+        NSLayoutConstraint.activate([
+            classifier.topAnchor.constraint(equalTo: introductionText.bottomAnchor, constant: 40)
+            ])
+        
     }
     
     override func didReceiveMemoryWarning() {
@@ -93,11 +154,13 @@ extension ViewController: UIImagePickerControllerDelegate {
         UIGraphicsPopContext()
         CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         imageView.image = newImage
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: introductionText.bottomAnchor, constant: 20),
+            ])
         
         guard let prediction = try? model.prediction(image: pixelBuffer!) else {
             return
         }
-        
         classifier.text = "I think this is a \(prediction.classLabel)."
     }
 }

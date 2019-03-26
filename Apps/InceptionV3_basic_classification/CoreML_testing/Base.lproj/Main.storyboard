@@ -10,7 +10,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Core ML-->
+        <!--Seedlings-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="CoreML_testing" customModuleProvider="target" sceneMemberID="viewController">
@@ -19,10 +19,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Sxh-Jg-ojr">
-                                <rect key="frame" x="32" y="184" width="299" height="299"/>
+                                <rect key="frame" x="38" y="223" width="299" height="299"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tGb-FV-IHp">
-                                <rect key="frame" x="0.0" y="587" width="375" height="46"/>
+                                <rect key="frame" x="0.0" y="543" width="375" height="46"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -37,7 +37,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <navigationItem key="navigationItem" title="Core ML" id="fU4-g6-4f6">
+                    <navigationItem key="navigationItem" title="Seedlings" id="fU4-g6-4f6">
                         <barButtonItem key="leftBarButtonItem" systemItem="camera" id="plg-Tp-YjE">
                             <connections>
                                 <action selector="camera:" destination="BYZ-38-t0r" id="9nM-dH-bNt"/>
@@ -63,7 +63,7 @@
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="xlr-8f-ibq" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="3ep-aH-c0j" userLabel="Core ML">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="3ep-aH-c0j" userLabel="Seedlings">
                         <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>

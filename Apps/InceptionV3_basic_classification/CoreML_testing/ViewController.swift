@@ -48,8 +48,8 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
         view.addSubview(CDSLabel)
         
         var introduction: String
-        introduction = "Welcome!\n- To take a photo, press on the camera icon on the top right.\n" +
-        "- To choose a photo from your library, press on the Library button on the top left."
+        introduction = "Welcome!\n- To take a photo, press on the camera icon on the top left.\n" +
+        "- To choose a photo from your library, press on the Library button on the top right."
         introductionText.translatesAutoresizingMaskIntoConstraints = false
         introductionText.isEditable = false
         introductionText.font = UIFont.systemFont(ofSize: 15, weight: .regular)
@@ -99,7 +99,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
         cameraPicker.delegate = self
         cameraPicker.sourceType = .camera
         cameraPicker.allowsEditing = false
-        
+        cameraPicker.showsCameraControls = true
         present(cameraPicker, animated: true)
     }
     
@@ -133,6 +133,8 @@ extension ViewController: UIImagePickerControllerDelegate {
         let newImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
+        print(newImage.size)
+        
         let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
         var pixelBuffer : CVPixelBuffer?
         let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(newImage.size.width), Int(newImage.size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
@@ -154,10 +156,9 @@ extension ViewController: UIImagePickerControllerDelegate {
         UIGraphicsPopContext()
         CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         imageView.image = newImage
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: introductionText.bottomAnchor, constant: 20),
-            ])
-        
+        //NSLayoutConstraint.activate([
+            //imageView.topAnchor.constraint(equalTo: //introductionText.bottomAnchor, constant: 20),
+            //])
         guard let prediction = try? model.prediction(image: pixelBuffer!) else {
             return
         }

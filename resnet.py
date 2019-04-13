@@ -13,14 +13,24 @@ import numpy as np
 CAT_CNT = 12
 TRAIN_SIZE = 2732
 VALID_SIZE = 304
-BATCH_SIZE = 32
+BATCH_SIZE = 64
+DROP_OUT = .5
+
+def inter_forward(model, x):
+    mod_list = list(model.modules())
+    for l in mod_list[:len(mod_list)-1]:
+        x = l(x)
+    return l
 
 def create_model():
     
     #load a pretrained resnet model
-    res = torchvision.models.resnet50(pretrained=True)
+    res = torchvision.models.resnet34(pretrained=True)
     
-    #freeze model weights
+    #let's remove some of the layers 
+    
+    #freeze model weights, only freeze first half
+
     for param in res.parameters():
         param.requires_grad = False
     
@@ -28,14 +38,15 @@ def create_model():
     n_inputs = res.fc.in_features
     
     #create fully connected layer with 12 out features + activation layer + softmax
-    res.fc = nn.Sequential(nn.Linear(n_inputs, 256),
+    res.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                           nn.ReLU(),
-                          nn.Linear(256, CAT_CNT),
+                          nn.Dropout(DROP_OUT),
+                          nn.Linear(128, CAT_CNT),
+                          nn.Dropout(DROP_OUT),
                           nn.ReLU(),
                           nn.LogSoftmax(dim = 1))
     
     return res
-    
 
 def create_dataloaders():
     #unpickling the data files
@@ -71,7 +82,12 @@ def train_model(model):
     phase = 'train'
     model.train()
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    
+    #optimizer creation
+    param_groups = [
+    {'params':model.fc.parameters(),'lr':.001},
+    ]
+    optimizer = optim.Adam(param_groups, lr=.00001)
      
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -80,7 +96,7 @@ def train_model(model):
     (t_loader, v_loader) = create_dataloaders()
     
     epochs = 50
-    steps = 0
+    #steps = 0
     #train_losses, test_losses = [], []
     
     for epoch in range (epochs):
@@ -94,10 +110,10 @@ def train_model(model):
         
         tl = next(iter(t_loader))
         for i, (inputs, labels) in enumerate(tl):
-            inputs= inputs.to(device)
+            inputs = inputs.to(device)
             labels = labels.to(device)
             
-            steps +=1
+            #steps +=1
             
             #clears the gradients of all optimized tensors
             optimizer.zero_grad()
@@ -108,8 +124,7 @@ def train_model(model):
             loss = criterion(outputs, torch.max(labels, 1)[1])
             loss.backward()
             optimizer.step()
-            print(preds.double())
-
+            #print(preds.double())
 
             # print statistics
             running_loss += loss.item() * inputs.size(0)
@@ -121,6 +136,7 @@ def train_model(model):
         epoch_acc = running_corrects.double() / (TRAIN_SIZE)
         
         vl = next(iter(v_loader))
+        
         for j, (vinputs, vlabels) in enumerate(vl):
             vinputs= vinputs.to(device)
             vlabels = vlabels.to(device)
@@ -128,6 +144,9 @@ def train_model(model):
             
             #forwards
             voutputs = model.forward(vinputs)
+            
+            
+            
             _, vpreds = torch.max(voutputs, 1)
             running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
             

@@ -13,8 +13,7 @@ import numpy as np
 CAT_CNT = 12
 TRAIN_SIZE = 2732
 VALID_SIZE = 304
-BATCH_SIZE = 64
-DROP_OUT = .5
+
 
 def inter_forward(model, x):
     mod_list = list(model.modules())
@@ -23,7 +22,7 @@ def inter_forward(model, x):
     return l
 
 
-def create_model():
+def create_model(frozenLayers):
 
     #load a pretrained resnet model
     res = torchvision.models.resnet34(pretrained=True)
@@ -32,7 +31,7 @@ def create_model():
     ct = 0
     for name, child in res.named_children():
        ct += 1
-       if ct < 7:
+       if ct < frozenLayers:
            for name2, params in child.named_parameters():
                params.requires_grad = False
 
@@ -48,7 +47,7 @@ def create_model():
                           nn.LogSoftmax(dim = 1))
     return res
 
-def create_dataloaders():
+def create_dataloaders(BATCH_SIZE):
     #unpickling the data files
     #files are trainX_128, trainY_128, validX_128, validY_128
     data_path = os.path.join(".", "balanced_pickled")
@@ -76,7 +75,7 @@ def create_dataloaders():
     return (trainLoader, validLoader)
 
 
-def train_model(model):
+def train_model(model, BATCH_SIZE, paramlr, optimlr):
     running_loss = 0
     running_corrects = 0
     phase = 'train'
@@ -85,16 +84,16 @@ def train_model(model):
     
     #optimizer creation
     param_groups = [
-    {'params':model.fc.parameters(),'lr':.0001},
+    {'params':model.fc.parameters(),'lr': paramlr},
     ]
-    optimizer = optim.Adam(param_groups, lr=.00001)
+    optimizer = optim.Adam(param_groups, lr=optimlr)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
         model.cuda()
         
 
-    (t_loader, v_loader) = create_dataloaders()
+    (t_loader, v_loader) = create_dataloaders(BATCH_SIZE)
 
     epochs = 50
     #steps = 0
@@ -136,30 +135,29 @@ def train_model(model):
         epoch_loss = running_loss/(TRAIN_SIZE)
         epoch_acc = running_corrects.double() / (TRAIN_SIZE)
 
-        if epoch%1==0:
-            model.eval()
-            
-            vl = next(iter(v_loader))
+        model.eval()
         
-            for j, (vinputs, vlabels) in enumerate(vl):
-                vinputs= vinputs.to(device)
-                vlabels = vlabels.to(device)
-                vloss = criterion(outputs, torch.max(labels, 1)[1])
+        vl = next(iter(v_loader))
+    
+        for j, (vinputs, vlabels) in enumerate(vl):
+            vinputs= vinputs.to(device)
+            vlabels = vlabels.to(device)
+            vloss = criterion(outputs, torch.max(labels, 1)[1])
 
-                #intermediate = inter_forward(model, vinputs)
-                #print(intermediate)
-    
-                #forwards
-                voutputs = model.forward(vinputs)
-                
-                
-                
-                _, vpreds = torch.max(voutputs, 1)
-                running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
-    
-                running_vloss += vloss.item() * inputs.size(0)
-                #print(running_valid_corrects)
-                #print('ok;')
+            #intermediate = inter_forward(model, vinputs)
+            #print(intermediate)
+
+            #forwards
+            voutputs = model.forward(vinputs)
+            
+            
+            
+            _, vpreds = torch.max(voutputs, 1)
+            running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+
+            running_vloss += vloss.item() * inputs.size(0)
+            #print(running_valid_corrects)
+            #print('ok;')
                 
             valid_loss = running_vloss/(VALID_SIZE)
             valid_acc = running_valid_corrects.double() / (VALID_SIZE)
@@ -174,8 +172,8 @@ def train_model(model):
     torch.save(model.state_dict(), "modelRes")
 
 def main():
-    model = create_model()
-    train_model(model)
+    model = create_model(7)
+    train_model(model, 64, .0001, .00001)
 
 
 if __name__ == "__main__":

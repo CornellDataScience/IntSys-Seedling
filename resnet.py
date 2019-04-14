@@ -67,7 +67,7 @@ def create_dataloaders():
     tensor_trainY = Variable(torch.from_numpy(np.array(trainY)).long(), requires_grad=False)
 
     train = TensorDataset(tensor_trainX, tensor_trainY)
-    trainLoader = {DataLoader(train, batch_size = BATCH_SIZE, shuffle = True)}
+    trainLoader = {DataLoader(train, batch_size = BATCH_SIZE, shuffle = True)} 
 
     tensor_validX = torch.stack([torch.Tensor(i) for i in validX])
     tensor_validY = torch.stack([torch.Tensor(i) for i in validY])
@@ -88,6 +88,7 @@ def train_model(model):
     param_groups = [
     {'params':model.fc.parameters(),'lr':.001},
     ]
+    
     optimizer = optim.Adam(param_groups, lr=.00001)
 
     if torch.cuda.is_available():
@@ -103,7 +104,7 @@ def train_model(model):
     for epoch in range (epochs):
         print('Epoch{}/{}.'.format(epoch, epochs))
         print('-' * 10)
-
+        
         running_loss = 0.0
         running_vloss = 0.0
         running_corrects = 0.0
@@ -124,42 +125,45 @@ def train_model(model):
             loss.backward()
             optimizer.step()
             #print(preds.double())
-
-            # print statistics
+            
+            #print statistics
             running_loss += loss.item() * inputs.size(0)
             running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
             #print(torch.sum(preds == torch.max(labels, 1)[1]))
-
+            
             #print('ok;')
         epoch_loss = running_loss/(TRAIN_SIZE)
         epoch_acc = running_corrects.double() / (TRAIN_SIZE)
 
-        vl = next(iter(v_loader))
-        
-        for j, (vinputs, vlabels) in enumerate(vl):
-            #vinputs= vinputs.to(device)
-            #vlabels = vlabels.to(device)
-            vloss = criterion(outputs, torch.max(labels, 1)[1])
-
-            #intermediate = inter_forward(model, vinputs)
-            #print(intermediate)
-
-            #forwards
-            voutputs = model.forward(vinputs)
+        if epoch%5 == 0:
+            model.eval()
             
+            vl = next(iter(v_loader))
             
-            
-            _, vpreds = torch.max(voutputs, 1)
-            running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+            for j, (vinputs, vlabels) in enumerate(vl):
+                if torch.cuda.is_available():
+                    vinputs= vinputs.to(device)
+                    vlabels = vlabels.to(device)
+                    
+                vloss = criterion(outputs, torch.max(labels, 1)[1])
+    
+                #intermediate = inter_forward(model, vinputs)
+                #print(intermediate)
+    
+                #forwards
+                voutputs = model.forward(vinputs)
+    
+                _, vpreds = torch.max(voutputs, 1)
+                running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+    
+                running_vloss += vloss.item() * inputs.size(0)
+                #print(running_valid_corrects)
+                #print('ok;')
+            valid_loss = running_vloss/(VALID_SIZE)
+            valid_acc = running_valid_corrects.double() / (VALID_SIZE)
 
-            running_vloss += vloss.item() * inputs.size(0)
-            #print(running_valid_corrects)
-            #print('ok;')
-        valid_loss = running_vloss/(VALID_SIZE)
-        valid_acc = running_valid_corrects.double() / (VALID_SIZE)
-
-        print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
-        print(running_corrects)
+            print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
+            print(running_corrects)
 
         print()
 

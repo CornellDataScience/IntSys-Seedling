@@ -38,7 +38,6 @@ def create_model():
 
     #counting in-features for fully connected layer
     n_inputs = res.fc.in_features
-
     #create fully connected layer with 12 out features + activation layer + softmax
     res.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                           nn.LeakyReLU(),
@@ -86,13 +85,14 @@ def train_model(model):
     
     #optimizer creation
     param_groups = [
-    {'params':model.fc.parameters(),'lr':.001},
+    {'params':model.fc.parameters(),'lr':.0001},
     ]
     optimizer = optim.Adam(param_groups, lr=.00001)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
         model.cuda()
+        
 
     (t_loader, v_loader) = create_dataloaders()
 
@@ -111,11 +111,13 @@ def train_model(model):
 
         tl = next(iter(t_loader))
         for i, (inputs, labels) in enumerate(tl):
-            #inputs = inputs.to(device)
-            #labels = labels.to(device)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            #print(inputs.size())
 
             #clears the gradients of all optimized tensors
             optimizer.zero_grad()
+            
 
             #forwards + backwards + optimize
             outputs = model.forward(inputs)
@@ -134,30 +136,34 @@ def train_model(model):
         epoch_loss = running_loss/(TRAIN_SIZE)
         epoch_acc = running_corrects.double() / (TRAIN_SIZE)
 
-        vl = next(iter(v_loader))
+        if epoch%1==0:
+            model.eval()
+            
+            vl = next(iter(v_loader))
         
-        for j, (vinputs, vlabels) in enumerate(vl):
-            #vinputs= vinputs.to(device)
-            #vlabels = vlabels.to(device)
-            vloss = criterion(outputs, torch.max(labels, 1)[1])
+            for j, (vinputs, vlabels) in enumerate(vl):
+                vinputs= vinputs.to(device)
+                vlabels = vlabels.to(device)
+                vloss = criterion(outputs, torch.max(labels, 1)[1])
 
-            #intermediate = inter_forward(model, vinputs)
-            #print(intermediate)
-
-            #forwards
-            voutputs = model.forward(vinputs)
-            
-            
-            
-            _, vpreds = torch.max(voutputs, 1)
-            running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
-
-            running_vloss += vloss.item() * inputs.size(0)
-            #print(running_valid_corrects)
-            #print('ok;')
-        valid_loss = running_vloss/(VALID_SIZE)
-        valid_acc = running_valid_corrects.double() / (VALID_SIZE)
-
+                #intermediate = inter_forward(model, vinputs)
+                #print(intermediate)
+    
+                #forwards
+                voutputs = model.forward(vinputs)
+                
+                
+                
+                _, vpreds = torch.max(voutputs, 1)
+                running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+    
+                running_vloss += vloss.item() * inputs.size(0)
+                #print(running_valid_corrects)
+                #print('ok;')
+                
+            valid_loss = running_vloss/(VALID_SIZE)
+            valid_acc = running_valid_corrects.double() / (VALID_SIZE)
+        
         print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print(running_corrects)
 

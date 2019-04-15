@@ -42,7 +42,7 @@ coreml_model.save(model_out)
 #import coremltools
 #from coremltools.models import MLModel
 
-spec = coremlmodel.get_spec()
-new_mlmodel = MLModel(spec)
-coremltools.utils.rename_feature(spec, 'old_output_name', 'new_output_name')
-coremltools.utils.save_spec(spec, 'model_new_output_name.mlmodel')
+#spec = coremlmodel.get_spec()
+#new_mlmodel = MLModel(spec)
+#coremltools.utils.rename_feature(spec, 'old_output_name', 'new_output_name')
+#coremltools.utils.save_spec(spec, 'model_new_output_name.mlmodel')

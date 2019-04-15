@@ -1,0 +1,234 @@
+Beginning Acc: .0933
+Num_epochs: 20
+Batch_size: 32
+criterion: CrossEntropyLoss
+lr = 0.001, momentum =0.9
+exp_lr_scheduler, step+size=7, gamma = 0.1
+
+Epoch 1/20
+----------
+Validation batch 9/10
+Epoch 0 result: 
+Avg loss (train): 0.0620
+Avg acc (train): 0.3550
+Avg loss (val): 0.0604
+Avg acc (val): 0.4133
+----------
+
+Epoch 2/20
+----------
+Validation batch 9/10
+Epoch 1 result: 
+Avg loss (train): 0.0257
+Avg acc (train): 0.2355
+Avg loss (val): 0.0274
+Avg acc (val): 0.2150
+----------
+
+Epoch 3/20
+----------
+Validation batch 9/10
+Epoch 2 result: 
+Avg loss (train): 0.0155
+Avg acc (train): 0.1758
+Avg loss (val): 0.0167
+Avg acc (val): 0.1733
+----------
+
+Epoch 4/20
+----------
+Validation batch 9/10
+Epoch 3 result: 
+Avg loss (train): 0.0110
+Avg acc (train): 0.1344
+Avg loss (val): 0.0120
+Avg acc (val): 0.1333
+----------
+
+Epoch 5/20
+----------
+Validation batch 9/10
+Epoch 4 result: 
+Avg loss (train): 0.0084
+Avg acc (train): 0.1106
+Avg loss (val): 0.0092
+Avg acc (val): 0.1140
+----------
+
+Epoch 6/20
+----------
+Validation batch 9/10
+Epoch 5 result: 
+Avg loss (train): 0.0067
+Avg acc (train): 0.0957
+Avg loss (val): 0.0073
+Avg acc (val): 0.0922
+----------
+
+Epoch 7/20
+----------
+Validation batch 9/10
+Epoch 6 result: 
+Avg loss (train): 0.0056
+Avg acc (train): 0.0822
+Avg loss (val): 0.0061
+Avg acc (val): 0.0819
+----------
+
+Epoch 8/20
+----------
+Validation batch 9/10
+Epoch 7 result: 
+Avg loss (train): 0.0048
+Avg acc (train): 0.0737
+Avg loss (val): 0.0053
+Avg acc (val): 0.0679
+----------
+
+Epoch 9/20
+----------
+Validation batch 9/10
+Epoch 8 result: 
+Avg loss (train): 0.0041
+Avg acc (train): 0.0686
+Avg loss (val): 0.0047
+Avg acc (val): 0.0641
+----------
+
+Epoch 10/20
+----------
+Validation batch 9/10
+Epoch 9 result: 
+Avg loss (train): 0.0037
+Avg acc (train): 0.0609
+Avg loss (val): 0.0040
+Avg acc (val): 0.0597
+----------
+
+Epoch 11/20
+----------
+Validation batch 9/10
+Epoch 10 result: 
+Avg loss (train): 0.0033
+Avg acc (train): 0.0557
+Avg loss (val): 0.0037
+Avg acc (val): 0.0542
+----------
+
+Epoch 12/20
+----------
+Validation batch 9/10
+Epoch 11 result: 
+Avg loss (train): 0.0030
+Avg acc (train): 0.0509
+Avg loss (val): 0.0033
+Avg acc (val): 0.0506
+----------
+
+Epoch 13/20
+----------
+Validation batch 9/10
+Epoch 12 result: 
+Avg loss (train): 0.0028
+Avg acc (train): 0.0472
+Avg loss (val): 0.0030
+Avg acc (val): 0.0459
+----------
+
+Epoch 14/20
+----------
+Validation batch 9/10
+Epoch 13 result: 
+Avg loss (train): 0.0025
+Avg acc (train): 0.0439
+Avg loss (val): 0.0027
+Avg acc (val): 0.0448
+----------
+
+Epoch 15/20
+----------
+Validation batch 9/10
+Epoch 14 result: 
+Avg loss (train): 0.0023
+Avg acc (train): 0.0422
+Avg loss (val): 0.0026
+Avg acc (val): 0.0404
+----------
+
+Epoch 16/20
+----------
+Validation batch 9/10
+Epoch 15 result: 
+Avg loss (train): 0.0021
+Avg acc (train): 0.0391
+Avg loss (val): 0.0024
+Avg acc (val): 0.0394
+----------
+
+Epoch 17/20
+----------
+Validation batch 9/10
+Epoch 16 result: 
+Avg loss (train): 0.0020
+Avg acc (train): 0.0375
+Avg loss (val): 0.0022
+Avg acc (val): 0.0375
+----------
+
+Epoch 18/20
+----------
+Validation batch 9/10
+Epoch 17 result: 
+Avg loss (train): 0.0019
+Avg acc (train): 0.0349
+Avg loss (val): 0.0021
+Avg acc (val): 0.0344
+----------
+
+Epoch 19/20
+----------
+Validation batch 9/10
+Epoch 18 result: 
+Avg loss (train): 0.0017
+Avg acc (train): 0.0340
+Avg loss (val): 0.0020
+Avg acc (val): 0.0333
+----------
+
+Epoch 20/20
+----------
+Validation batch 9/10
+Epoch 19 result: 
+Avg loss (train): 0.0016
+Avg acc (train): 0.0323
+Avg loss (val): 0.0019
+Avg acc (val): 0.0313
+----------
+lr = 0.01
+
+Training completed in 240m 57s
+Best acc: 0.4133
+=======================================
+Epoch 1/2
+----------
+Validation batch 10/10
+Epoch 0 result: 
+Avg loss (train): 0.0571
+Avg acc (train): 0.3858
+Avg loss (val): 0.0499
+Avg acc (val): 0.4833
+----------
+
+Epoch 2/2
+----------
+Validation batch 10/10
+Epoch 1 result: 
+Avg loss (train): 0.0252
+Avg acc (train): 0.2394
+Avg loss (val): 0.0231
+Avg acc (val): 0.2733
+----------
+
+
+Training completed in 26m 9s
+Best acc: 0.4833

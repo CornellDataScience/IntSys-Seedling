@@ -170,6 +170,9 @@ def train_model(model):
     #running_loss = 0.0
     #save the model
     torch.save(model.state_dict(), "modelRes")
+    #save model with onnx
+    torch.onnx.export(model, "resNet_notPrune.onnx", verbose=True)
+
 
 def main():
     model = create_model()

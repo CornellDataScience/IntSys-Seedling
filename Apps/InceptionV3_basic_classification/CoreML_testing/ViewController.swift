@@ -17,14 +17,15 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     let mainColor = UIColor(red: 88/255.0, green: 196/255.0, blue: 91/255.0, alpha: 1.0)
     let lightColor = UIColor(red: 215.0/255.0, green: 235.0/255.0, blue: 202.0/255.0, alpha: 1.0)
     
-    var model: Inceptionv3!
+    //var model: Inceptionv3!
+    var model: resNet_notPrune!
     
     var appTitleLabel =  UILabel()
     var CDSLabel =  UILabel()
     var introductionText = UITextView()
     
     override func viewWillAppear(_ animated: Bool) {
-        model = Inceptionv3()
+        model = resNet_notPrune()
     }
     
     override func viewDidLoad() {
@@ -128,8 +129,8 @@ extension ViewController: UIImagePickerControllerDelegate {
             
         print(image.size)
         
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: 299, height: 299), true, 2.0)
-        image.draw(in: CGRect(x: 0, y: 0, width: 299, height: 299))
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: 128, height: 128), true, 2.0)
+        image.draw(in: CGRect(x: 0, y: 0, width: 128, height: 128))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
@@ -159,7 +160,7 @@ extension ViewController: UIImagePickerControllerDelegate {
         //NSLayoutConstraint.activate([
             //imageView.topAnchor.constraint(equalTo: //introductionText.bottomAnchor, constant: 20),
             //])
-        guard let prediction = try? model.prediction(image: pixelBuffer!) else {
+        guard let prediction = try? model.prediction(_0: pixelBuffer!) else {
             return
         }
         classifier.text = "I think this is a \(prediction.classLabel)."

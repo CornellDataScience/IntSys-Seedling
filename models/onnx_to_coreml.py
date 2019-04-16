@@ -24,8 +24,8 @@ model_out = sys.argv[2]
 model_file = open(model_in, 'rb')
 model_proto = onnx_pb.ModelProto()
 model_proto.ParseFromString(model_file.read())
-coreml_model = convert(model_proto, mode='classifier', class_labels=CLASSES) #image_input_names=['0'], image_output_names=['186'])
-coreml_model.save(model_out)
+coreml_model = convert(model_proto, mode='classifier', image_input_names=['0'], class_labels=CLASSES, predicted_feature_name='classLabel') #image_input_names=['0'], image_output_names=['186'])
+#coreml_model.save(model_out)
 
 '''def convert(model,
             mode='classifier,
@@ -39,10 +39,11 @@ coreml_model.save(model_out)
             custom_conversion_functions = {})'''
 
 
-#import coremltools
-#from coremltools.models import MLModel
+import coremltools
 
-#spec = coremlmodel.get_spec()
-#new_mlmodel = MLModel(spec)
-#coremltools.utils.rename_feature(spec, 'old_output_name', 'new_output_name')
-#coremltools.utils.save_spec(spec, 'model_new_output_name.mlmodel')
+spec = coreml_model.get_spec()
+#coremltools.utils.rename_feature(spec, '0', 'image')
+#coremltools.utils.rename_feature(spec, '372', 'classLabelProbs')
+coremltools.utils.save_spec(spec, model_out)
+
+

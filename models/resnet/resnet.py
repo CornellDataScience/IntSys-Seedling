@@ -2,12 +2,15 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from torchsummary import summary
 from torch.autograd import Variable
+from tqdm import tqdm
+
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import pickle
 import os
 import numpy as np
+
 
 #some constants
 CAT_CNT = 12
@@ -110,7 +113,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
         running_valid_corrects = 0.0
 
         tl = next(iter(t_loader))
-        for i, (inputs, labels) in enumerate(tl):
+        for i, (inputs, labels) in tqdm(enumerate(tl)):
             inputs = inputs.to(device)
             labels = labels.to(device)
 

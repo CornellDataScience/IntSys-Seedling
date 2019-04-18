@@ -108,9 +108,9 @@ def main():
 	with open(os.path.join(".", "balanced_pickled", "trainY_" + str(img_size)), "wb") as f:
 	    pickle.dump(trainY, f)
 	with open(os.path.join(".", "balanced_pickled", "validX_" + str(img_size)), "wb") as f:
-	    pickle.dump(validX, f)
+		pickle.dump(validX, f)
 	with open(os.path.join(".", "balanced_pickled", "validY_" + str(img_size)), "wb") as f:
-	    pickle.dump(validY, f)
+		pickle.dump(validY, f)
 
 	dataset = (trainX, trainY, validX, validY)
 	with open(os.path.join(".", "balanced_pickled", "dataset_" + str(img_size)), "wb") as f:

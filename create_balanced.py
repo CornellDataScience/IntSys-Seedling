@@ -15,7 +15,7 @@ import pickle
 
 # GENERATING TRAINING DATA
 
-def generateData(img_size):
+def generateData(img_size, max_balanced):
     """
     @param: img_size: size of image
     
@@ -32,7 +32,7 @@ def generateData(img_size):
         tv = np.array([0,0,0,0,0,0,0,0,0,0,0,0])
         tv[catNames.index(cat)] = 1
         assert np.max(tv) == 1 # make sure properly classfifiedd
-        for i in range (0,max_balanced):
+        for i in range (0, max_balanced):
             imgPath = os.path.join(balanced_dir, cat + "_" + str(i) + ".png")
             if(os.path.isfile(imgPath)):
                 im_frame = cv2.imread(imgPath)
@@ -95,7 +95,7 @@ def main():
 	print(12 * 253)
 
 	img_size = 128
-	trainX, validX, trainY, validY = generateData(img_size=img_size)
+	trainX, validX, trainY, validY = generateData(img_size=img_size, max_balanced=max_balanced)
 
 	# pickle load
 	pickle_dir = os.path.join(".", 'balanced_pickled')

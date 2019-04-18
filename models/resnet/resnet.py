@@ -170,6 +170,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
 
     #running_loss = 0.0
     #save the model
+    torch.save(model, "full_model")
     torch.save(model.state_dict(), "modelRes")
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
     dummy_input = dummy_input.to(device)
@@ -181,7 +182,7 @@ def main():
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)
     #train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .00001, .00001, 30)
+    train_model(model, 64, .0001, .00001, 5)
 
 
 if __name__ == "__main__":

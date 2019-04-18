@@ -114,6 +114,7 @@ def main():
 
 	dataset = (trainX, trainY, validX, validY)
 	with open(os.path.join(".", "balanced_pickled", "dataset_" + str(img_size)), "wb") as f:
-    	pickle.dump(dataset, f)
+		pickle.dump(dataset, f)
+	
 if __name__=='__main__':
     main()

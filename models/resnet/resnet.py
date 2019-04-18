@@ -170,17 +170,18 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
 
     #running_loss = 0.0
     #save the model
-    #torch.save(model.state_dict(), "modelRes")
+    torch.save(model.state_dict(), "modelRes")
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
     dummy_input = dummy_input.to(device)
     torch.onnx.export(model, dummy_input, "resNet_notPrune.onnx")
+    print(model.state_dict())
 
 def main():
     model = create_model(7)
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)
     #train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .0001, .00001, 1)
+    train_model(model, 64, .00001, .00001, 30)
 
 
 if __name__ == "__main__":

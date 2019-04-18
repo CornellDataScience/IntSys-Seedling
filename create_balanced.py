@@ -15,7 +15,7 @@ import pickle
 
 # GENERATING TRAINING DATA
 
-def generateData(img_size, max_balanced):
+def generateData(img_size, max_balanced, balanced_dir):
     """
     @param: img_size: size of image
     
@@ -95,7 +95,7 @@ def main():
 	print(12 * 253)
 
 	img_size = 128
-	trainX, validX, trainY, validY = generateData(img_size=img_size, max_balanced=max_balanced)
+	trainX, validX, trainY, validY = generateData(img_size=img_size, max_balanced=max_balanced, balanced_dir = balanced_dir)
 
 	# pickle load
 	pickle_dir = os.path.join(".", 'balanced_pickled')

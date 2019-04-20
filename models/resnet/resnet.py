@@ -163,23 +163,22 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
             valid_acc = running_valid_corrects.double() / (VALID_SIZE)
 
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
-            print(running_corrects)
-
         print()
 
     #running_loss = 0.0
     #save the model
-    torch.save(model.state_dict(), "modelRes")
-    #save model with onnx
-    torch.onnx.export(model, "resNet_notPrune.onnx", verbose=True)
 
+    #torch.save(model.state_dict(), "modelRes")
+    dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
+    dummy_input = dummy_input.to(device)
+    torch.onnx.export(model, dummy_input, "resNet_notPrune.onnx")
 
 def main():
     model = create_model(7)
-    train_model(model, 8, .0001, .00001, 10)
-    train_model(model, 16, .0001, .00001, 10)
-    train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .0001, .00001, 10)
+    #train_model(model, 8, .0001, .00001, 10)
+    #train_model(model, 16, .0001, .00001, 10)
+    #train_model(model, 32, .0001, .00001, 10)
+    train_model(model, 64, .0001, .00001, 1)
 
 
 if __name__ == "__main__":

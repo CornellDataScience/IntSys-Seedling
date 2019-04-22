@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import imageio
+import csv
 
 from keras.utils import plot_model
 from keras.models import Model
@@ -231,6 +232,13 @@ def reader():
     test_dict = fill_dict(test_path, test_dict)
     return train_dict, test_dict
 # I commented out some of the code for learning the model.
+
+
+def score_from_csv():
+    input_file = csv.DictReader(open("sub.csv"))
+
+
+
 def main():
     train_dict, test_dict = reader()
     #X_train = np.array(train_dict['image'])

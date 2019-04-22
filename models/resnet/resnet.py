@@ -2,12 +2,15 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from torchsummary import summary
 from torch.autograd import Variable
+from tqdm import tqdm
+
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import pickle
 import os
 import numpy as np
+
 
 #some constants
 CAT_CNT = 12
@@ -110,9 +113,10 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
         running_valid_corrects = 0.0
 
         tl = next(iter(t_loader))
-        for i, (inputs, labels) in enumerate(tl):
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+        for i, (inputs, labels) in tqdm(enumerate(tl)):
+            if torch.cuda.is_available():
+                inputs = inputs.to(device)
+                labels = labels.to(device)
 
             #clears the gradients of all optimized tensors
             optimizer.zero_grad()
@@ -139,8 +143,9 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
             model.eval()
 
             vl = next(iter(v_loader))
-
+            cnt = 0
             for j, (vinputs, vlabels) in enumerate(vl):
+                cnt+=1
                 if torch.cuda.is_available():
                     vinputs= vinputs.to(device)
                     vlabels = vlabels.to(device)
@@ -156,29 +161,53 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
                 _, vpreds = torch.max(voutputs, 1)
                 running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
 
-                running_vloss += vloss.item() * inputs.size(0)
+                running_vloss += vloss.item() 
                 #print(running_valid_corrects)
                 #print('ok;')
             valid_loss = running_vloss/(VALID_SIZE)
             valid_acc = running_valid_corrects.double() / (VALID_SIZE)
-
+            #print(cnt)
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print()
 
-    #running_loss = 0.0
-    #save the model
 
-    #torch.save(model.state_dict(), "modelRes")
+    #testing model on specific classes
+    nb_classes = CAT_CNT
+
+    confusion_matrix = torch.zeros(nb_classes, nb_classes)
+    with torch.no_grad():
+        for i, (inputs, classes) in enumerate(t_loader['val']):
+            
+            if torch.cuda.is_available():
+                inputs = inputs.to(device)
+                classes = classes.to(device)
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+            for t, p in zip(classes.view(-1), preds.view(-1)):
+                    confusion_matrix[t.long(), p.long()] += 1
+    
+    print(confusion_matrix)
+    
+    print(confusion_matrix.diag()/confusion_matrix.sum(1))
+
+
+    #torch model save
+    torch.save(model, "full_model")
+    torch.save(model.state_dict(), "modelRes")
+
+    #onnx model save
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
-    dummy_input = dummy_input.to(device)
+    if torch.cuda.is_available():
+        dummy_input = dummy_input.to(device)
     torch.onnx.export(model, dummy_input, "resNet_notPrune.onnx")
+    print(model.state_dict())
 
 def main():
     model = create_model(7)
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)
     #train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .0001, .00001, 1)
+    train_model(model, 64, .0001, .00001, 5)
 
 
 if __name__ == "__main__":

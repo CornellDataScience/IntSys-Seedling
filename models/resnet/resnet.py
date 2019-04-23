@@ -82,7 +82,7 @@ def create_dataloaders(BATCH_SIZE):
     return (trainLoader, validLoader)
 
 
-def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1):
+def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, model):
     running_loss = 0
     running_corrects = 0
     phase = 'train'
@@ -177,13 +177,14 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1):
             sheet1.write(epoch + start, 3, valid_acc.double().item())
             sheet1.write(epoch + start, 4, valid_loss)
             sheet1.write(epoch + start, 5, epoch)
+            sheet1.write(epoch, 9+model, valid_acc.double().item())
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print()
 
 
     #testing model on specific classes
     nb_classes = CAT_CNT
-
+    sheet1.write(epoch-1, 9+model, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
 #    confusion_matrix = torch.zeros(nb_classes, nb_classes)
 #    with torch.no_grad():
 #        for i, (inputs, classes) in enumerate(t_loader['val']):
@@ -217,6 +218,7 @@ def main():
     wb = Workbook()
     sheet1 = wb.add_sheet('Sheet 1')
     line = 1
+    model = 1
     epochs = 100
     print('test')
     #4 apart, 4 apart, 3 apart
@@ -224,7 +226,8 @@ def main():
         for j in range (-5, -1):
             for k in range (-6, -3):
                 print('loop')
-                train_model(model, 2**i, 10**j, 10**k, epochs, line, sheet1)
+                train_model(model, 2**i, 10**j, 10**k, epochs, line, sheet1, model)
+                model+=1
                 line += epochs
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)

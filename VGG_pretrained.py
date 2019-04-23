@@ -422,6 +422,10 @@ torch.save(vgg16.state_dict(), 'VGG16_2_extra_layers.pt')
 
 vgg16_trained.eval()
 dummy_input = torch.randn(1, 3, 224, 224)
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+if torch.cuda.is_available():
+    dummy_input = dummy_input.to(device)
 torch.onnx.export(vgg16_trained, dummy_input, "91_acc_VGG.onnx")
 
 

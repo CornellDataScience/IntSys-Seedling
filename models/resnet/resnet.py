@@ -117,7 +117,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1):
         running_valid_corrects = 0.0
 
         tl = next(iter(t_loader))
-        for i, (inputs, labels) in tqdm(enumerate(tl)):
+        for i, (inputs, labels) in enumerate(tqdm(tl)):
             if torch.cuda.is_available():
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -216,7 +216,7 @@ def main():
     wb = Workbook()
     sheet1 = wb.add_sheet('Sheet 1')
     line = 1
-    epochs = 50
+    epochs = 80
     for i in range (3, 7):
         for j in range (-5, -2):
             for k in range (-6, -2):

@@ -12,8 +12,6 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset
-import torchsummary
-from torchsummary import summary
 import torchvision
 import torchvision.models as models
 from torchvision import datasets, transforms
@@ -96,8 +94,8 @@ def show_databatch(inputs, classes):
     imshow(out, title=[class_names[x] for x in classes])
 
 # Get a batch of training data
-inputs, classes = next(iter(dataloader))
-show_databatch(inputs, classes)
+# inputs, classes = next(iter(dataloader))
+# show_databatch(inputs, classes)
 
 
 # In[6]:
@@ -159,25 +157,27 @@ vgg16 = models.vgg16(pretrained=True)
 # In[10]:
 
 
-def freeze_layers(model):
+def freeze_layers(model, n_layers=30):
+    i = 0
     for param in model.parameters():
-        param.requires_grad = False
-
+        if i < n_layers:
+            param.requires_grad = False
+        i+=1
 
 # In[11]:
 
 
-freeze_layers(vgg16)
+freeze_layers(vgg16, n_layers=20)
 num_features = vgg16.classifier[6].in_features
 features = list(vgg16.classifier.children())[:-1] # Remove last layer
-features.extend([nn.Linear(num_features, len(class_names))]) # Add our layer with 4 outputs
+features.extend([nn.Linear(num_features, 3*len(class_names))]) # Add our layer with 4 outputs
+features.extend([nn.Linear(3*len(class_names), len(class_names))]) # Add our layer with 4 outputs
 vgg16.classifier = nn.Sequential(*features) # Replace the model classifier
 
 
 # In[12]:
 
 
-summary(vgg16, (3, 224, 224))
 
 
 # In[13]:
@@ -276,7 +276,7 @@ if use_gpu:
     vgg16.cuda() #.cuda() will move everything to the GPU side
 criterion = nn.CrossEntropyLoss()
 
-optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.0001, momentum=0.9)
+optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.01, momentum=0.85)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
 
@@ -300,7 +300,11 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
 #     avg_loss_val = 0
 #     avg_acc_val = 0
     
-    
+    train_losses = []
+    train_accs = []
+    val_losses = []
+    val_accs = []
+
     train_batches = len(train_dataloader)
     val_batches = len(test_dataloader)
     
@@ -351,7 +355,10 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
         
         avg_loss_train = loss_train / n_train
         avg_acc_train = acc_train / n_train
-        
+        train_losses.append(avg_loss_train)
+        train_accs.append(avg_acc_train)
+
+
         vgg.train(False)
         #vgg.eval()
             
@@ -381,7 +388,10 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
         
         avg_loss_val = loss_val / n_val
         avg_acc_val = acc_val / n_val
-        
+        val_losses.append(avg_loss_val)
+        val_accs.append(avg_acc_val)
+
+
         print()
         print("Epoch {} result: ".format(epoch))
         print("Avg loss (train): {:.4f}".format(avg_loss_train))
@@ -401,55 +411,35 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
     print("Best acc: {:.4f}".format(best_acc))
     
     vgg.load_state_dict(best_model_wts)
-    return vgg
+    return vgg, train_losses, train_accs, val_losses, val_accs
 
 
 # In[21]:
 
 
-vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=2)
-torch.save(vgg16.state_dict(), 'VGG16_v2-OCT_Retina_half_dataset.pt')
+vgg16_trained, train_losses, train_accs, val_losses, val_accs = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=1)
+torch.save(vgg16.state_dict(), 'VGG16_2_extra_layers.pt')
+
+vgg16_trained.eval()
+dummy_input = torch.randn(1, 3, 224, 224)
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+if torch.cuda.is_available():
+    dummy_input = dummy_input.to(device)
+torch.onnx.export(vgg16_trained, dummy_input, "91_acc_VGG.onnx")
 
 
 # In[19]:
 
 
-eval_model(vgg16_trained, criterion)
-
+np.save("train_losses.npz", np.array(train_losses))
+np.save("train_accs.npz", np.array(train_accs))
+np.save("val_losses.npz", np.array(val_losses))
+np.save("val_accs", np.array(val_accs))
 
 # In[20]:
 
 
 print(len(train_dataloader))
 print(len(test_dataloader))
-
-
-# In[22]:
-
-
-len(train_indices)
-
-
-# In[23]:
-
-
-len(test_indices)
-
-
-# In[24]:
-
-
-2827/32
-
-
-# In[28]:
-
-
-n_val
-
-
-# In[ ]:
-
-
-
 

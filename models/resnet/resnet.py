@@ -82,7 +82,7 @@ def create_dataloaders(BATCH_SIZE):
     return (trainLoader, validLoader)
 
 
-def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, model):
+def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1):
     running_loss = 0
     running_corrects = 0
     phase = 'train'
@@ -196,15 +196,13 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
 #            _, preds = torch.max(outputs, 1)
 #            for t, p in zip(classes.view(-1), preds.view(-1)):
 #                    confusion_matrix[t.long(), p.long()] += 1
-
    # print(confusion_matrix)
 
     #print(confusion_matrix.diag()/confusion_matrix.sum(1))
 
-
     #torch model save
     torch.save(model, "full_model")
-    torch.save(model.state_dict(), "modelRes")
+    torch.save(model.state_dict(), "modelRes.pt")
 
     #onnx model save
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
@@ -217,12 +215,20 @@ def main():
     model = create_model(15)
     wb = Workbook()
     sheet1 = wb.add_sheet('Sheet 1')
-    line = 1
+    #model = 1
+    print('test')
+    #4 apart, 4 apart, 3 apart
+    #lr1 = .0001
+  
+    #train_model(model, 64, lr1, lr1, epochs, line, sheet1, model)
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)
+    #train_model(model, 32, .0001, .00001, 10)
+    #train_model(model, 64, .0001, .00001, 3)
+
     #train_model(model, 32, .0001, .00001, 2, 1, sheet1)
-    #train_model(model, 64, .0001, .00001, 2, 6, sheet1)
-    print('bad')
+    train_model(model, 64, .0001, .00001, 80, 0, sheet1)
+    #print('bad')
     sheet1.write(0, 0, 'Parameters and Epoch')
     sheet1.write(0, 1, 'Epoch Loss')
     sheet1.write(0, 2, 'Epoch Acc')

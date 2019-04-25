@@ -113,7 +113,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
         running_valid_corrects = 0.0
 
         tl = next(iter(t_loader))
-        for i, (inputs, labels) in tqdm(enumerate(tl)):
+        for i, (inputs, labels) in enumerate(tqdm(tl)):
             if torch.cuda.is_available():
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -176,7 +176,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
 
     confusion_matrix = torch.zeros(nb_classes, nb_classes)
     with torch.no_grad():
-        for i, (inputs, classes) in enumerate(t_loader['val']):
+        for i, (inputs, classes) in enumerate(v_loader['val']):
             
             if torch.cuda.is_available():
                 inputs = inputs.to(device)
@@ -193,7 +193,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
 
     #torch model save
     torch.save(model, "full_model")
-    torch.save(model.state_dict(), "modelRes")
+    torch.save(model.state_dict(), "modelRes.pt")
 
     #onnx model save
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
@@ -207,7 +207,7 @@ def main():
     #train_model(model, 8, .0001, .00001, 10)
     #train_model(model, 16, .0001, .00001, 10)
     #train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .0001, .00001, 5)
+    train_model(model, 64, .0001, .00001, 3)
 
 
 if __name__ == "__main__":

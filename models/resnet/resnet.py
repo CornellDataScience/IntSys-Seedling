@@ -107,6 +107,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
     epochs = epochsNum
     #steps = 0
     #train_losses, test_losses = [], []
+    sheet1.write(0, 9+m, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr))
 
     for epoch in range (epochs):
         print('Epoch{}/{}.'.format(epoch, epochs))
@@ -172,20 +173,19 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
             valid_loss = running_vloss/(VALID_SIZE)
             valid_acc = running_valid_corrects.double() / (VALID_SIZE)
             #print(cnt)
-            sheet1.write(epoch + start, 0, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
-            sheet1.write(epoch + start, 1, epoch_loss)
-            sheet1.write(epoch + start, 2, epoch_acc.double().item())
-            sheet1.write(epoch + start, 3, valid_acc.double().item())
-            sheet1.write(epoch + start, 4, valid_loss)
-            sheet1.write(epoch + start, 5, epoch)
-            sheet1.write(epoch, 9+m, valid_acc.double().item())
+            sheet1.write(epoch + start - 1, 0, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
+            sheet1.write(epoch + start - 1, 1, epoch_loss)
+            sheet1.write(epoch + start - 1, 2, epoch_acc.double().item())
+            sheet1.write(epoch + start - 1, 3, valid_acc.double().item())
+            sheet1.write(epoch + start - 1, 4, valid_loss)
+            sheet1.write(epoch + start - 1, 5, epoch)
+            sheet1.write(epoch + 1, 9+m, valid_acc.double().item())
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print()
 
 
     #testing model on specific classes
     nb_classes = CAT_CNT
-    sheet1.write(epoch-1, 9+m, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
 #    confusion_matrix = torch.zeros(nb_classes, nb_classes)
 #    with torch.no_grad():
 #        for i, (inputs, classes) in enumerate(t_loader['val']):
@@ -220,15 +220,12 @@ def main():
     print('test')
     #4 apart, 4 apart, 3 apart
     #lr1 = .0001
-  
-    #train_model(model, 64, lr1, lr1, epochs, line, sheet1, model)
-    #train_model(model, 8, .0001, .00001, 10)
-    #train_model(model, 16, .0001, .00001, 10)
-    #train_model(model, 32, .0001, .00001, 10)
-    #train_model(model, 64, .0001, .00001, 3)
+    #train_model(model, bs, plr, olr, epochs, startLine in excel, sheet1, model)
+    #startline shouls always be >= 2
+    #model should increase by 1
 
-    #train_model(model, 32, .0001, .00001, 2, 1, sheet1)
-    train_model(model, 32, .001, .0001, 150, 0, sheet1,0)
+    train_model(model, 64, .01, .0001, 100, 2, sheet1, 1)
+    train_model(model, 32, .01, .0001, 150, 100+2, sheet1, 2)
     #print('bad')
     sheet1.write(0, 0, 'Parameters and Epoch')
     sheet1.write(0, 1, 'Epoch Loss')

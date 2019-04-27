@@ -11,6 +11,9 @@ import pickle
 import os
 import numpy as np
 
+import xlwt
+from xlwt import Workbook
+
 
 #some constants
 CAT_CNT = 12
@@ -79,7 +82,7 @@ def create_dataloaders(BATCH_SIZE):
     return (trainLoader, validLoader)
 
 
-def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
+def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m):
     running_loss = 0
     running_corrects = 0
     phase = 'train'
@@ -93,6 +96,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
     ]
     optimizer = optim.Adam(param_groups, lr=optimlr)
 
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
         model.cuda()
@@ -102,6 +106,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
     epochs = epochsNum
     #steps = 0
     #train_losses, test_losses = [], []
+    sheet1.write(0, 9+m, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr))
 
     for epoch in range (epochs):
         print('Epoch{}/{}.'.format(epoch, epochs))
@@ -113,7 +118,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
         running_valid_corrects = 0.0
 
         tl = next(iter(t_loader))
-        for i, (inputs, labels) in tqdm(enumerate(tl)):
+        for i, (inputs, labels) in enumerate(tqdm(tl)):
             if torch.cuda.is_available():
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -161,53 +166,73 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum):
                 _, vpreds = torch.max(voutputs, 1)
                 running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
 
-                running_vloss += vloss.item() 
+                running_vloss += vloss.item()
                 #print(running_valid_corrects)
                 #print('ok;')
             valid_loss = running_vloss/(VALID_SIZE)
             valid_acc = running_valid_corrects.double() / (VALID_SIZE)
             #print(cnt)
+            sheet1.write(epoch + start - 1, 0, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
+            sheet1.write(epoch + start - 1, 1, epoch_loss)
+            sheet1.write(epoch + start - 1, 2, epoch_acc.double().item())
+            sheet1.write(epoch + start - 1, 3, valid_acc.double().item())
+            sheet1.write(epoch + start - 1, 4, valid_loss)
+            sheet1.write(epoch + start - 1, 5, epoch)
+            sheet1.write(epoch + 1, 9+m, valid_acc.double().item())
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print()
 
 
     #testing model on specific classes
     nb_classes = CAT_CNT
+#    confusion_matrix = torch.zeros(nb_classes, nb_classes)
+#    with torch.no_grad():
+#        for i, (inputs, classes) in enumerate(t_loader['val']):
+#
+#            if torch.cuda.is_available():
+#                inputs = inputs.to(device)
+#                classes = classes.to(device)
+#            outputs = model(inputs)
+#            _, preds = torch.max(outputs, 1)
+#            for t, p in zip(classes.view(-1), preds.view(-1)):
+#                    confusion_matrix[t.long(), p.long()] += 1
+   # print(confusion_matrix)
 
-    confusion_matrix = torch.zeros(nb_classes, nb_classes)
-    with torch.no_grad():
-        for i, (inputs, classes) in enumerate(t_loader['val']):
-            
-            if torch.cuda.is_available():
-                inputs = inputs.to(device)
-                classes = classes.to(device)
-            outputs = model(inputs)
-            _, preds = torch.max(outputs, 1)
-            for t, p in zip(classes.view(-1), preds.view(-1)):
-                    confusion_matrix[t.long(), p.long()] += 1
-    
-    print(confusion_matrix)
-    
-    print(confusion_matrix.diag()/confusion_matrix.sum(1))
-
+    #print(confusion_matrix.diag()/confusion_matrix.sum(1))
 
     #torch model save
     torch.save(model, "full_model")
-    torch.save(model.state_dict(), "modelRes")
+    torch.save(model.state_dict(), "modelRes.pt")
 
     #onnx model save
     dummy_input = torch.randn(BATCH_SIZE, 3, 128, 128)
     if torch.cuda.is_available():
         dummy_input = dummy_input.to(device)
     torch.onnx.export(model, dummy_input, "resNet_notPrune.onnx")
-    print(model.state_dict())
+   # print(model.state_dict())
 
 def main():
-    model = create_model(7)
-    #train_model(model, 8, .0001, .00001, 10)
-    #train_model(model, 16, .0001, .00001, 10)
-    #train_model(model, 32, .0001, .00001, 10)
-    train_model(model, 64, .0001, .00001, 5)
+    model = create_model(15)
+    wb = Workbook()
+    sheet1 = wb.add_sheet('Sheet 1')
+    #model = 1
+    print('test')
+    #4 apart, 4 apart, 3 apart
+    #lr1 = .0001
+  
+    #train_model(model, bs, plr, olr, epochs, startLine in excel, sheet1, model)
+    #startline shouls always be >= 2
+    #model should increase by 1
+
+    train_model(model, 64, .0001, .00001, 5, 2, sheet1, 1)
+    train_model(model, 32, .0001, .00001, 5, 8, sheet1, 2)
+    #print('bad')
+    sheet1.write(0, 0, 'Parameters and Epoch')
+    sheet1.write(0, 1, 'Epoch Loss')
+    sheet1.write(0, 2, 'Epoch Acc')
+    sheet1.write(0, 3, 'Valid Acc')
+    sheet1.write(0, 4, 'Valid Loss')
+    wb.save('TuningHyperParams.xls')
 
 
 if __name__ == "__main__":

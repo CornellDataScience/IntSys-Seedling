@@ -224,8 +224,8 @@ def main():
     #startline shouls always be >= 2
     #model should increase by 1
 
-    train_model(model, 64, .0001, .00001, 5, 2, sheet1, 1)
-    train_model(model, 32, .0001, .00001, 5, 8, sheet1, 2)
+    train_model(model, 64, .001, .0001, 100, 2, sheet1, 1)
+    #train_model(model, 32, .0001, .00001, 5, 8, sheet1, 2)
     #print('bad')
     sheet1.write(0, 0, 'Parameters and Epoch')
     sheet1.write(0, 1, 'Epoch Loss')

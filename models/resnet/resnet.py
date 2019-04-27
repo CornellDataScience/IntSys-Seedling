@@ -3,14 +3,14 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchsummary import summary
 from torch.autograd import Variable
 from tqdm import tqdm
-
+from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import pickle
 import os
 import numpy as np
-
+from torchvision import datasets, transforms
 import xlwt
 from xlwt import Workbook
 
@@ -19,6 +19,7 @@ from xlwt import Workbook
 CAT_CNT = 12
 TRAIN_SIZE = 2732
 VALID_SIZE = 304
+BALANCED_COUNT = 253
 
 
 def inter_forward(model, x):
@@ -54,7 +55,7 @@ def create_model(frozenLayers):
                           nn.LogSoftmax(dim = 1))
     return res
 
-def create_dataloaders(BATCH_SIZE):
+def create_dataloaders_old(BATCH_SIZE):
     #unpickling the data files
     #files are trainX_128, trainY_128, validX_128, validY_128
     data_path = os.path.join(".", "balanced_pickled")
@@ -81,6 +82,77 @@ def create_dataloaders(BATCH_SIZE):
 
     return (trainLoader, validLoader)
 
+def indicesSplit(ds, balanced_size, percent_train=0.9):
+    train_indices = []
+    test_indices = []
+    counts = {}
+    
+    for i in range(len(ds)):
+        label_index = ds[i][1]
+        
+        counts[label_index] = counts.get(label_index, 0) + 1
+        
+        if counts[label_index] < balanced_size * percent_train:
+            train_indices.append(i)
+            
+        elif counts[label_index] < balanced_size:
+            test_indices.append(i)
+            
+        
+    return train_indices, test_indices
+
+def create_dataloaders(BATCH_SIZE):
+    data_dir = os.path.join('.', 'data')
+
+    # VGG-16 Takes 224x224 images as input, so we resize all of them
+    data_transform = transforms.Compose([transforms.Resize(256),transforms.CenterCrop(224),transforms.ToTensor()])
+    
+    image_dataset = datasets.ImageFolder(data_dir, transform=data_transform)
+    
+    dataloader = torch.utils.data.DataLoader(
+        image_dataset, batch_size=BATCH_SIZE,
+        shuffle=True, num_workers=4)
+    
+    dataset_size = len(image_dataset)
+    
+    #print("Loaded images under {}".format(dataset_size))
+    
+    #print("Classes: ")
+    class_names = image_dataset.classes
+    #print(image_dataset.classes)
+    
+    train_indices, test_indices = indicesSplit(image_dataset, BALANCED_COUNT)
+    
+    train_ds = Subset(image_dataset, train_indices)
+    test_ds = Subset(image_dataset, test_indices)
+    train_dataloader = DataLoader(
+            train_ds, batch_size=32,
+            shuffle=True, num_workers=4
+        )
+    test_dataloader = DataLoader(
+            test_ds, batch_size=32,
+            shuffle=True, num_workers=4
+        )
+    return train_dataloader, test_dataloader
+
+def indicesSplit(ds, balanced_size, percent_train=0.9):
+    train_indices = []
+    test_indices = []
+    counts = {}
+    
+    for i in range(len(ds)):
+        label_index = ds[i][1]
+        
+        counts[label_index] = counts.get(label_index, 0) + 1
+        
+        if counts[label_index] < balanced_size * percent_train:
+            train_indices.append(i)
+            
+        elif counts[label_index] < balanced_size:
+            test_indices.append(i)
+            
+        
+    return train_indices, test_indices
 
 def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m):
     running_loss = 0

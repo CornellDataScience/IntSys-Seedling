@@ -100,6 +100,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
     if torch.cuda.is_available():
         device = torch.device("cuda")
         model.cuda()
+        print("yes")
 
     (t_loader, v_loader) = create_dataloaders(BATCH_SIZE)
 
@@ -219,13 +220,12 @@ def main():
     print('test')
     #4 apart, 4 apart, 3 apart
     #lr1 = .0001
-  
     #train_model(model, bs, plr, olr, epochs, startLine in excel, sheet1, model)
     #startline shouls always be >= 2
     #model should increase by 1
 
-    train_model(model, 64, .001, .0001, 100, 2, sheet1, 1)
-    #train_model(model, 32, .0001, .00001, 5, 8, sheet1, 2)
+    train_model(model, 64, .01, .0001, 100, 2, sheet1, 1)
+    train_model(model, 32, .01, .0001, 150, 100+2, sheet1, 2)
     #print('bad')
     sheet1.write(0, 0, 'Parameters and Epoch')
     sheet1.write(0, 1, 'Epoch Loss')

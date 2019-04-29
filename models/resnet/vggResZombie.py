@@ -57,11 +57,6 @@ print("Classes: ")
 class_names = image_dataset.classes
 print(image_dataset.classes)
 
-
-# In[4]:
-
-
-# calc balanced count
 class_counts = {}
 
 for i in range(len(image_dataset)):
@@ -77,30 +72,10 @@ for class_ in class_counts:
 print(balanced_count)
 
 
-# In[5]:
-
-
-# loading data 2
-
-def imshow(inp, title=None):
-    inp = inp.numpy().transpose((1, 2, 0))
-    # plt.figure(figsize=(10, 10))
-    plt.axis('off')
-    plt.imshow(inp)
-    if title is not None:
-        plt.title(title)
-    plt.pause(0.001)
-
-def show_databatch(inputs, classes):
-    out = torchvision.utils.make_grid(inputs)
-    imshow(out, title=[class_names[x] for x in classes])
 
 # Get a batch of training data
 inputs, classes = next(iter(dataloader))
-show_databatch(inputs, classes)
 
-
-# In[6]:
 
 
 # loading data 3
@@ -124,16 +99,10 @@ def indicesSplit(ds, balanced_size, percent_train=0.9):
     return train_indices, test_indices
 
 
-# In[7]:
-
-
 # loading data 4
 k = int(252*.9)
 
 train_indices, test_indices = indicesSplit(image_dataset, balanced_count)
-
-
-# In[8]:
 
 
 # loading data 5
@@ -155,13 +124,13 @@ test_dataloader = DataLoader(
 
 vgg16 = models.resnet34(pretrained=True)
 
-
-# In[10]:
-
+cnt = 0
 
 def freeze_layers(model):
     for param in model.parameters():
-        param.requires_grad = False
+        if cnt < 25:
+            param.requires_grad = False
+            cnt+=1
 
 
 # In[11]:

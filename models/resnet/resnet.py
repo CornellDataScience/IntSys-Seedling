@@ -189,9 +189,11 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
         running_vloss = 0.0
         running_corrects = 0.0
         running_valid_corrects = 0.0
+        n_train = 0
+        n_val = 0
 
-        tl = next(iter(t_loader))
-        for i, (inputs, labels) in enumerate(tqdm(tl)):
+        
+        for i, (inputs, labels) in enumerate(tqdm(t_loader)):
             if torch.cuda.is_available():
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -202,33 +204,32 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
             #forwards + backwards + optimize
             outputs = model.forward(inputs)
             _, preds = torch.max(outputs, 1)
-            loss = criterion(outputs, torch.max(labels, 1)[1])
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
             #print(preds.double())
-
+            n_train = len(preds)
             #print statistics
             running_loss += loss.item() * inputs.size(0)
-            running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
+            running_corrects += torch.sum(preds == labels.data).item()
             #print(torch.sum(preds == torch.max(labels, 1)[1]))
 
             #print('ok;')
-        epoch_loss = running_loss/(TRAIN_SIZE)
-        epoch_acc = running_corrects.double() / (TRAIN_SIZE)
+        epoch_loss = running_loss/(n_train)
+        epoch_acc = running_corrects / (n_train)
 
 
         if epoch%1 == 0:
             model.eval()
 
-            vl = next(iter(v_loader))
             cnt = 0
-            for j, (vinputs, vlabels) in enumerate(vl):
+            for j, (vinputs, vlabels) in enumerate(v_loader):
                 cnt+=1
                 if torch.cuda.is_available():
                     vinputs= vinputs.to(device)
                     vlabels = vlabels.to(device)
 
-                vloss = criterion(outputs, torch.max(labels, 1)[1])
+                vloss = criterion(outputs,labels)
 
                 #intermediate = inter_forward(model, vinputs)
                 #print(intermediate)
@@ -237,21 +238,22 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
                 voutputs = model.forward(vinputs)
 
                 _, vpreds = torch.max(voutputs, 1)
-                running_valid_corrects += torch.sum(vpreds == torch.max(vlabels, 1)[1])
+                n_val = len(vpreds)
+                running_valid_corrects += torch.sum(vpreds == vlabels.data)
 
                 running_vloss += vloss.item()
                 #print(running_valid_corrects)
                 #print('ok;')
-            valid_loss = running_vloss/(VALID_SIZE)
-            valid_acc = running_valid_corrects.double() / (VALID_SIZE)
+            valid_loss = running_vloss/(n_val)
+            valid_acc = running_valid_corrects / (n_val)
             #print(cnt)
             sheet1.write(epoch + start - 1, 0, 'BS:' + str(BATCH_SIZE) + ',PLR:' + str(paramlr) + ',OLR:' + str(optimlr) + ', Epoch: ' + str(epoch))
             sheet1.write(epoch + start - 1, 1, epoch_loss)
-            sheet1.write(epoch + start - 1, 2, epoch_acc.double().item())
-            sheet1.write(epoch + start - 1, 3, valid_acc.double().item())
+            sheet1.write(epoch + start - 1, 2, epoch_acc)
+            sheet1.write(epoch + start - 1, 3, valid_acc)
             sheet1.write(epoch + start - 1, 4, valid_loss)
             sheet1.write(epoch + start - 1, 5, epoch)
-            sheet1.write(epoch + 1, 9+m, valid_acc.double().item())
+            sheet1.write(epoch + 1, 9+m, valid_acc)
             print('{} Loss: {:.4f} Acc: {:.4f} Valid Acc: {:.4f} Valid Loss: {:.4f}'.format(phase, epoch_loss, epoch_acc.double(), valid_acc, valid_loss))
         print()
 
@@ -285,7 +287,7 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
    # print(model.state_dict())
 
 def main():
-    model = create_model(15)
+    model = create_model(25)
     wb = Workbook()
     sheet1 = wb.add_sheet('Sheet 1')
     #model = 1

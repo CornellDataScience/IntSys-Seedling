@@ -57,11 +57,6 @@ print("Classes: ")
 class_names = image_dataset.classes
 print(image_dataset.classes)
 
-
-# In[4]:
-
-
-# calc balanced count
 class_counts = {}
 
 for i in range(len(image_dataset)):
@@ -76,9 +71,10 @@ for class_ in class_counts:
         balanced_count = class_counts[balanced_class]
 print(balanced_count)
 
+# Get a batch of training data
+inputs, classes = next(iter(dataloader))
 
 
-# In[6]:
 
 
 # loading data 3
@@ -102,16 +98,10 @@ def indicesSplit(ds, balanced_size, percent_train=0.9):
     return train_indices, test_indices
 
 
-# In[7]:
-
-
 # loading data 4
 k = int(252*.9)
 
 train_indices, test_indices = indicesSplit(image_dataset, balanced_count)
-
-
-# In[8]:
 
 
 # loading data 5
@@ -133,13 +123,13 @@ test_dataloader = DataLoader(
 
 vgg16 = models.resnet34(pretrained=True)
 
-
-# In[10]:
-
+cnt = 0
 
 def freeze_layers(model):
     for param in model.parameters():
-        param.requires_grad = False
+        if cnt < 25:
+            param.requires_grad = False
+            cnt+=1
 
 
 # In[11]:

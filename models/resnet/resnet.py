@@ -82,6 +82,7 @@ def create_dataloaders_old(BATCH_SIZE):
 
     return (trainLoader, validLoader)
 
+
 def indicesSplit(ds, balanced_size, percent_train=0.9):
     train_indices = []
     test_indices = []
@@ -242,6 +243,10 @@ def train_model(model, BATCH_SIZE, paramlr, optimlr, epochsNum, start, sheet1, m
                 running_valid_corrects += torch.sum(vpreds == vlabels.data)
 
                 running_vloss += vloss.item()
+
+
+                
+                
                 #print(running_valid_corrects)
                 #print('ok;')
             valid_loss = running_vloss/(n_val)
@@ -294,12 +299,13 @@ def main():
     print('test')
     #4 apart, 4 apart, 3 apart
     #lr1 = .0001
+
     #train_model(model, bs, plr, olr, epochs, startLine in excel, sheet1, model)
     #startline shouls always be >= 2
     #model should increase by 1
+    train_model(model, 64, .01, .0001, 100, 2, sheet1, 1)
+    train_model(model, 32, .01, .0001, 150, 100+2, sheet1, 2)
 
-    train_model(model, 128, .001, .001, 100, 2, sheet1, 1)
-    train_model(model, 64, .001, .001, 150, 100+2, sheet1, 2)
     #print('bad')
     sheet1.write(0, 0, 'Parameters and Epoch')
     sheet1.write(0, 1, 'Epoch Loss')

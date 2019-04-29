@@ -3,7 +3,6 @@
 
 # # [helpful link](https://www.kaggle.com/carloalbertobarbano/vgg16-transfer-learning-pytorch)
 
-# In[1]:
 
 
 import torch
@@ -25,15 +24,11 @@ import time
 import copy
 
 
-# In[2]:
 
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
     print("Using CUDA")
-
-
-# In[3]:
 
 
 #loading data 1
@@ -119,35 +114,33 @@ test_dataloader = DataLoader(
     )
 
 
-# In[9]:
+
 
 
 vgg16 = models.resnet34(pretrained=True)
 
-cnt = 0
-
 def freeze_layers(model):
+    cnt = 0
     for param in model.parameters():
         if cnt < 25:
             param.requires_grad = False
             cnt+=1
 
 
-# In[11]:
 
 
 freeze_layers(vgg16)
 
 
-
+n_inputs = vgg16.fc.in_features
 
 
 #create fully connected layer with 12 out features + activation layer + softmax
 vgg16.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                       nn.LeakyReLU(),
                       nn.BatchNorm1d(128),
-                      nn.Linear(128, CAT_CNT),
-                      nn.BatchNorm1d(CAT_CNT),
+                      nn.Linear(128, 12),
+                      nn.BatchNorm1d(12),
                       nn.LeakyReLU(),
                       nn.LogSoftmax(dim = 1))
 
@@ -187,9 +180,6 @@ def visualize_model(vgg, num_images=6):
             break
         
     vgg.train(mode=was_training) # Revert model back to original training state
-
-
-# In[14]:
 
 
 def eval_model(vgg, criterion):
@@ -240,7 +230,6 @@ def eval_model(vgg, criterion):
     print('-' * 10)
 
 
-# In[15]:
 
 
 if use_gpu:
@@ -251,14 +240,11 @@ optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.0001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
 
-# In[16]:
-
 
 print("Test before training")
 eval_model(vgg16, criterion)
 
 
-# In[20]:
 
 
 def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
@@ -375,45 +361,13 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
     return vgg
 
 
-# In[21]:
 
 
 vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=2)
 torch.save(vgg16.state_dict(), 'VGG16_v2-OCT_Retina_half_dataset.pt')
 
 
-# In[19]:
-
 
 eval_model(vgg16_trained, criterion)
 
 
-# In[20]:
-
-
-print(len(train_dataloader))
-print(len(test_dataloader))
-
-
-# In[22]:
-
-
-len(train_indices)
-
-
-# In[23]:
-
-
-len(test_indices)
-
-
-# In[24]:
-
-
-2827/32
-
-
-# In[28]:
-
-
-n_val

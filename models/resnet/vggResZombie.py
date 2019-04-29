@@ -77,28 +77,6 @@ for class_ in class_counts:
 print(balanced_count)
 
 
-# In[5]:
-
-
-# loading data 2
-
-def imshow(inp, title=None):
-    inp = inp.numpy().transpose((1, 2, 0))
-    # plt.figure(figsize=(10, 10))
-    plt.axis('off')
-    plt.imshow(inp)
-    if title is not None:
-        plt.title(title)
-    plt.pause(0.001)
-
-def show_databatch(inputs, classes):
-    out = torchvision.utils.make_grid(inputs)
-    imshow(out, title=[class_names[x] for x in classes])
-
-# Get a batch of training data
-inputs, classes = next(iter(dataloader))
-show_databatch(inputs, classes)
-
 
 # In[6]:
 
@@ -168,19 +146,22 @@ def freeze_layers(model):
 
 
 freeze_layers(vgg16)
-num_features = vgg16.classifier[6].in_features
-features = list(vgg16.classifier.children())[:-1] # Remove last layer
-features.extend([nn.Linear(num_features, len(class_names))]) # Add our layer with 4 outputs
-vgg16.classifier = nn.Sequential(*features) # Replace the model classifier
 
+n_inputs = vgg16.fc.in_features
+
+    #create fully connected layer with 12 out features + activation layer + softmax
+vgg16.fc = nn.Sequential(nn.Linear(n_inputs, 128),
+         nn.LeakyReLU(),
+         nn.BatchNorm1d(128),
+         nn.Linear(128, 12),
+         nn.BatchNorm1d(12),
+         nn.LeakyReLU(),
+         nn.LogSoftmax(dim = 1))
 
 # In[12]:
 
 
-summary(vgg16, (3, 224, 224))
 
-
-# In[13]:
 
 
 def visualize_model(vgg, num_images=6):
@@ -276,7 +257,7 @@ if use_gpu:
     vgg16.cuda() #.cuda() will move everything to the GPU side
 criterion = nn.CrossEntropyLoss()
 
-optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.0001, momentum=0.9)
+optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
 
@@ -407,42 +388,9 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
 # In[21]:
 
 
-vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=2)
-torch.save(vgg16.state_dict(), 'VGG16_v2-OCT_Retina_half_dataset.pt')
-
-
-# In[19]:
+vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=200)
+torch.save(vgg16.state_dict(), 'resnet_200.pt')
 
 
 eval_model(vgg16_trained, criterion)
 
-
-# In[20]:
-
-
-print(len(train_dataloader))
-print(len(test_dataloader))
-
-
-# In[22]:
-
-
-len(train_indices)
-
-
-# In[23]:
-
-
-len(test_indices)
-
-
-# In[24]:
-
-
-2827/32
-
-
-# In[28]:
-
-
-n_val

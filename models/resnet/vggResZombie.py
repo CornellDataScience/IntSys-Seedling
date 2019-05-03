@@ -123,9 +123,10 @@ test_dataloader = DataLoader(
 
 vgg16 = models.resnet34(pretrained=True)
 
-cnt = 0
+
 
 def freeze_layers(model):
+    cnt = 0 
     for param in model.parameters():
         if cnt < 25:
             param.requires_grad = False

@@ -11,9 +11,7 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset
-import torchsummary
 from torchsummary import summary
-import torchvision
 import torchvision.models as models
 from torchvision import datasets, transforms
 import os
@@ -66,43 +64,66 @@ for class_ in class_counts:
         balanced_count = class_counts[balanced_class]
 print(balanced_count)
 
+
+
 # Get a batch of training data
 inputs, classes = next(iter(dataloader))
 
 
 
-
 # loading data 3
-def indicesSplit(ds, balanced_size, percent_train=0.9):
+def indicesSplit_2sets(ds, balanced_size, percent_train=0.9, n_classes_pre = 8):
+    pretrain_indices = []
+    pretest_indices = []
+    
     train_indices = []
     test_indices = []
+    
     counts = {}
     
     for i in range(len(ds)):
         label_index = ds[i][1]
         
         counts[label_index] = counts.get(label_index, 0) + 1
-        
+                
         if counts[label_index] < balanced_size * percent_train:
-            train_indices.append(i)
+            if label_index < n_classes_pre:
+                pretrain_indices.append(i)
+            else:
+                train_indices.append(i)
             
         elif counts[label_index] < balanced_size:
-            test_indices.append(i)
-            
+            if label_index < n_classes_pre:
+                pretest_indices.append(i)
+            else:
+                test_indices.append(i)
         
-    return train_indices, test_indices
+    return pretrain_indices, pretest_indices, train_indices, test_indices
+
 
 
 # loading data 4
 k = int(252*.9)
 
-train_indices, test_indices = indicesSplit(image_dataset, balanced_count)
-
+pretrain_indices, pretest_indices, train_indices, test_indices = indicesSplit_2sets(image_dataset, balanced_count)
 
 # loading data 5
-
+pretrain_ds = Subset(image_dataset, pretrain_indices)
+pretest_ds = Subset(image_dataset, pretest_indices)
 train_ds = Subset(image_dataset, train_indices)
 test_ds = Subset(image_dataset, test_indices)
+
+
+pretrain_dataloader = DataLoader(
+        pretrain_ds, batch_size=32,
+        shuffle=True, num_workers=4
+    )
+pretest_dataloader = DataLoader(
+        pretest_ds, batch_size=32,
+        shuffle=True, num_workers=4
+    )
+
+
 train_dataloader = DataLoader(
         train_ds, batch_size=32,
         shuffle=True, num_workers=4
@@ -115,38 +136,27 @@ test_dataloader = DataLoader(
 
 
 
+resnet34 = models.resnet34(pretrained=True)
 
-vgg16 = models.resnet34(pretrained=True)
-
-def freeze_layers(model):
-    cnt = 0
+def freeze_layers(model, n_layers=30):
+    i = 0
     for param in model.parameters():
-        if cnt < 25:
+        if i < n_layers:
             param.requires_grad = False
-            cnt+=1
+        i+=1
+
+freeze_layers(resnet34, 30)
+n_inputs = resnet34.fc.in_features
 
 
-
-
-freeze_layers(vgg16)
-
-n_inputs = vgg16.fc.in_features
-
-
-    #create fully connected layer with 12 out features + activation layer + softmax
-vgg16.fc = nn.Sequential(nn.Linear(n_inputs, 128),
-         nn.LeakyReLU(),
-         nn.BatchNorm1d(128),
-         nn.Linear(128, 12),
-         nn.BatchNorm1d(12),
-         nn.LeakyReLU(),
-         nn.LogSoftmax(dim = 1))
-
-
-# In[12]:
-
-
-
+#create fully connected layer with 12 out features + activation layer + softmax
+resnet34.fc = nn.Sequential(nn.Linear(n_inputs, 128),
+                      nn.LeakyReLU(),
+                      nn.BatchNorm1d(128),
+                      nn.Linear(128, 8),
+                      nn.BatchNorm1d(8),
+                      nn.LeakyReLU(),
+                      nn.LogSoftmax(dim = 1))
 
 
 def visualize_model(vgg, num_images=6):
@@ -184,7 +194,7 @@ def visualize_model(vgg, num_images=6):
     vgg.train(mode=was_training) # Revert model back to original training state
 
 
-def eval_model(vgg, criterion):
+def eval_model(vgg, criterion, test_dataloader):
     since = time.time()
     avg_loss = 0
     avg_acc = 0
@@ -233,23 +243,18 @@ def eval_model(vgg, criterion):
 
 
 
-
 if use_gpu:
-    vgg16.cuda() #.cuda() will move everything to the GPU side
+    resnet34.cuda() #.cuda() will move everything to the GPU side
 criterion = nn.CrossEntropyLoss()
 
-optimizer_ft = optim.SGD(vgg16.parameters(), lr=0.001, momentum=0.9)
+optimizer_ft = optim.SGD(resnet34.parameters(), lr=0.0001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-
-
 print("Test before training")
-eval_model(vgg16, criterion)
+eval_model(resnet34, criterion, pretrain_dataloader)
 
 
-
-
-def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
+def train_model(vgg, criterion, optimizer, scheduler, train_dataloader, test_dataloader, num_epochs=10):
     since = time.time()
     best_model_wts = copy.deepcopy(vgg.state_dict())
     best_acc = 0.0
@@ -259,7 +264,11 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
 #     avg_loss_val = 0
 #     avg_acc_val = 0
     
-    
+    train_losses = []
+    train_accs = []
+    val_losses = []
+    val_accs = []
+
     train_batches = len(train_dataloader)
     val_batches = len(test_dataloader)
     
@@ -310,7 +319,10 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
         
         avg_loss_train = loss_train / n_train
         avg_acc_train = acc_train / n_train
-        
+        train_losses.append(avg_loss_train)
+        train_accs.append(avg_acc_train)
+
+
         vgg.train(False)
         #vgg.eval()
             
@@ -340,7 +352,10 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
         
         avg_loss_val = loss_val / n_val
         avg_acc_val = acc_val / n_val
-        
+        val_losses.append(avg_loss_val)
+        val_accs.append(avg_acc_val)
+
+
         print()
         print("Epoch {} result: ".format(epoch))
         print("Avg loss (train): {:.4f}".format(avg_loss_train))
@@ -360,15 +375,37 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
     print("Best acc: {:.4f}".format(best_acc))
     
     vgg.load_state_dict(best_model_wts)
-    return vgg
+    return vgg, train_losses, train_accs, val_losses, val_accs
 
 
+pretrain_epoch = 30
+resnet_pretrained, pretrain_losses, pretrain_accs, preval_losses, preval_accs \
+    = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, pretrain_dataloader, pretest_dataloader, num_epochs=pretrain_epoch)
 
 
-vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=200)
-torch.save(vgg16.state_dict(), 'resnet_200.pt')
+torch.save(resnet34.state_dict(), 'VGG16_pretrained_subset_seedlings.pt')
+
+np.save("pretrain_losses", np.array(pretrain_losses))
+np.save("pretrain_accs", np.array(pretrain_accs))
+np.save("preval_losses", np.array(preval_losses))
+np.save("preval_accs", np.array(preval_accs))
 
 
-eval_model(vgg16_trained, criterion)
+freeze_layers(resnet_pretrained, n_layers=28)
+
+pretrain_epoch = 30
+resnet_trained, train_losses, train_accs, val_losses, val_accs \
+    = train_model(resnet_pretrained, criterion, optimizer_ft, exp_lr_scheduler, train_dataloader, test_dataloader, num_epochs=pretrain_epoch)
+
+
+torch.save(resnet34.state_dict(), 'VGG16_transer_trained_subset_seedlings.pt')
+
+np.save("train_losses", np.array(train_losses))
+np.save("train_accs", np.array(train_accs))
+np.save("val_losses", np.array(val_losses))
+np.save("val_accs", np.array(val_accs))
+
+
+eval_model(resnet_trained, criterion)
 
 

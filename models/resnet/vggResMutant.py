@@ -22,6 +22,8 @@ import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import time
 import copy
+import xlwt
+from xlwt import Workbook
 
 
 
@@ -47,7 +49,7 @@ dataloader = torch.utils.data.DataLoader(
 dataset_size = len(image_dataset)
 
 print("Loaded images under {}".format(dataset_size))
-    
+
 print("Classes: ")
 class_names = image_dataset.classes
 print(image_dataset.classes)
@@ -57,7 +59,7 @@ class_counts = {}
 for i in range(len(image_dataset)):
     label_index = image_dataset[i][1]
     class_counts[label_index] = class_counts.get(label_index, 0) + 1
-    
+
 balanced_count = None
 balanced_class = None
 for class_ in class_counts:
@@ -77,19 +79,19 @@ def indicesSplit(ds, balanced_size, percent_train=0.9):
     train_indices = []
     test_indices = []
     counts = {}
-    
+
     for i in range(len(ds)):
         label_index = ds[i][1]
-        
+
         counts[label_index] = counts.get(label_index, 0) + 1
-        
+
         if counts[label_index] < balanced_size * percent_train:
             train_indices.append(i)
-            
+
         elif counts[label_index] < balanced_size:
             test_indices.append(i)
-            
-        
+
+
     return train_indices, test_indices
 
 
@@ -151,36 +153,36 @@ vgg16.fc = nn.Sequential(nn.Linear(n_inputs, 128),
 
 def visualize_model(vgg, num_images=6):
     was_training = vgg.training
-    
+
     # Set model for evaluation
     vgg.train(False)
-    vgg.eval() 
-    
+    vgg.eval()
+
     images_so_far = 0
 
     for i, data in enumerate(test_dataloader):
         inputs, labels = data
         size = inputs.size()[0]
-        
+
         inputs, labels = Variable(inputs, volatile=True), Variable(labels, volatile=True)
-        
+
         outputs = vgg(inputs)
-        
+
         _, preds = torch.max(outputs.data, 1)
         predicted_labels = [preds[j] for j in range(inputs.size()[0])]
-        
+
         print("Ground truth:")
         show_databatch(inputs.data.cpu(), labels.data.cpu())
         print("Prediction:")
         show_databatch(inputs.data.cpu(), predicted_labels)
-        
+
         del inputs, labels, outputs, preds, predicted_labels
         torch.cuda.empty_cache()
-        
+
         images_so_far += size
         if images_so_far >= num_images:
             break
-        
+
     vgg.train(mode=was_training) # Revert model back to original training state
 
 
@@ -191,11 +193,11 @@ def eval_model(vgg, criterion):
     loss_test = 0
     acc_test = 0
     n = 0
-    
+
     test_batches = len(test_dataloader)
     print("Evaluating model")
     print('-' * 10)
-    
+
     for i, data in enumerate(test_dataloader):
         print("\rTest batch {}/{}".format(i+1, test_batches), end='', flush=True)
 
@@ -207,23 +209,23 @@ def eval_model(vgg, criterion):
             inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
         else:
             inputs, labels = Variable(inputs), Variable(labels)
-            
+
         outputs = vgg(inputs)
 
         _, preds = torch.max(outputs.data, 1)
-        
+
         loss = criterion(outputs, labels)
-        
+
         n += len(preds)
         loss_test += loss.data.item()
         acc_test += torch.sum(preds == labels).item()
 
         del inputs, labels, outputs, preds
         torch.cuda.empty_cache()
-        
+
     avg_loss = loss_test / n
     avg_acc = acc_test / n
-    
+
     elapsed_time = time.time() - since
     print()
     print("Evaluation completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
@@ -249,54 +251,56 @@ eval_model(vgg16, criterion)
 
 
 
-def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
+def train_model(vgg, criterion, optimizer, scheduler, train_acc, val_acc, epochs, num_epochs=5):
     since = time.time()
     best_model_wts = copy.deepcopy(vgg.state_dict())
     best_acc = 0.0
-    
+
 #     avg_loss = 0
 #     avg_acc = 0
 #     avg_loss_val = 0
 #     avg_acc_val = 0
-    
-    
+
+
     train_batches = len(train_dataloader)
     val_batches = len(test_dataloader)
-    
+    wb = Workbook()
+    sheet1 = wb.add_sheet('Sheet 1')
+
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch+1, num_epochs))
         print('-' * 10)
-        
+
         loss_train = 0
         loss_val = 0
         acc_train = 0
         acc_val = 0
         n_train = 0
         n_val = 0
-        
+
         vgg.train(True)
-        
+
         for i, data in enumerate(train_dataloader):
             print("\rTraining batch {}/{}".format(i + 1, train_batches), end='', flush=True)
-                
-                
+
+
             inputs, labels = data
-            
+
             if use_gpu:
                 inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
             else:
                 inputs, labels = Variable(inputs), Variable(labels)
-            
+
             optimizer.zero_grad()
-            
+
             outputs = vgg(inputs)
-            
+
             _, preds = torch.max(outputs.data, 1)
             loss = criterion(outputs, labels)
-            
+
             loss.backward()
             optimizer.step()
-            
+
             n_train += len(preds)
             loss_train += loss.data.item()
             acc_train += torch.sum(preds == labels.data).item()
@@ -304,43 +308,43 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
 #             print("l", labels.data)
 #             print("\nn_correct", torch.sum(preds == labels.data).item())
 #             print("n", len(preds))
-            
+
             del inputs, labels, outputs, preds
             torch.cuda.empty_cache()
-        
+
         avg_loss_train = loss_train / n_train
         avg_acc_train = acc_train / n_train
-        
+
         vgg.train(False)
         #vgg.eval()
-            
+
         for i, data in enumerate(test_dataloader):
             print("\rValidation batch {}/{}".format(i+1, val_batches), end='', flush=True)
-                
+
             inputs, labels = data
 
             if use_gpu:
                 inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
             else:
                 inputs, labels = Variable(inputs), Variable(labels)
-            
+
             optimizer.zero_grad()
-            
+
             outputs = vgg(inputs)
-            
+
             _, preds = torch.max(outputs.data, 1)
             loss = criterion(outputs, labels)
-            
+
             n_val += len(preds)
             loss_val += loss.data.item()
             acc_val += torch.sum(preds == labels.data).item()
-            
+
             del inputs, labels, outputs, preds
             torch.cuda.empty_cache()
-        
+
         avg_loss_val = loss_val / n_val
         avg_acc_val = acc_val / n_val
-        
+
         print()
         print("Epoch {} result: ".format(epoch))
         print("Avg loss (train): {:.4f}".format(avg_loss_train))
@@ -349,26 +353,32 @@ def train_model(vgg, criterion, optimizer, scheduler, num_epochs=10):
         print("Avg acc (val): {:.4f}".format(avg_acc_val))
         print('-' * 10)
         print()
-        
+
+        train_acc.append(avg_acc_train)
+        val_acc.append(avg_acc_val)
+        epochs.append(epoch)
+
+
         if avg_acc_val > best_acc:
             best_acc = avg_acc_val
             best_model_wts = copy.deepcopy(vgg.state_dict())
-        
+
     elapsed_time = time.time() - since
     print()
     print("Training completed in {:.0f}m {:.0f}s".format(elapsed_time // 60, elapsed_time % 60))
     print("Best acc: {:.4f}".format(best_acc))
-    
+
     vgg.load_state_dict(best_model_wts)
-    return vgg
+    return vgg, train_acc, val_acc
 
+#def plotRes():
+    #graph1 = plt.plot()
 
-
-
-vgg16_trained = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=200)
+vgg16_trained, trainAccList, valAccList, epochList = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, [], [], [], num_epochs=200)
 torch.save(vgg16.state_dict(), 'resnet_200.pt')
+plot = plt.plot(epochList, trainAccList, valAccList)
+plot.savefig('resAcc.png')
+
 
 
 eval_model(vgg16_trained, criterion)
-
-

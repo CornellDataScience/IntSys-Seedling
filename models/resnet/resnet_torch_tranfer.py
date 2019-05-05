@@ -16,6 +16,7 @@ import torchvision.models as models
 from torchvision import datasets, transforms
 import os
 import matplotlib.pyplot as plt
+plt.switch_backend('Agg')
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import time
@@ -25,6 +26,7 @@ import copy
 
 
 use_gpu = torch.cuda.is_available()
+#use_gpu = False
 if use_gpu:
     print("Using CUDA")
 
@@ -153,8 +155,8 @@ n_inputs = resnet34.fc.in_features
 resnet34.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                       nn.LeakyReLU(),
                       nn.BatchNorm1d(128),
-                      nn.Linear(128, 8),
-                      nn.BatchNorm1d(8),
+                      nn.Linear(128, 12),
+                      nn.BatchNorm1d(12),
                       nn.LeakyReLU(),
                       nn.LogSoftmax(dim = 1))
 
@@ -268,6 +270,7 @@ def train_model(vgg, criterion, optimizer, scheduler, train_dataloader, test_dat
     train_accs = []
     val_losses = []
     val_accs = []
+    epochs = []
 
     train_batches = len(train_dataloader)
     val_batches = len(test_dataloader)
@@ -321,7 +324,7 @@ def train_model(vgg, criterion, optimizer, scheduler, train_dataloader, test_dat
         avg_acc_train = acc_train / n_train
         train_losses.append(avg_loss_train)
         train_accs.append(avg_acc_train)
-
+        epochs.append(epoch)
 
         vgg.train(False)
         #vgg.eval()
@@ -375,37 +378,47 @@ def train_model(vgg, criterion, optimizer, scheduler, train_dataloader, test_dat
     print("Best acc: {:.4f}".format(best_acc))
     
     vgg.load_state_dict(best_model_wts)
-    return vgg, train_losses, train_accs, val_losses, val_accs
+    return vgg, train_losses, train_accs, val_losses, val_accs, epochs
 
 
-pretrain_epoch = 30
-resnet_pretrained, pretrain_losses, pretrain_accs, preval_losses, preval_accs \
-    = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, pretrain_dataloader, pretest_dataloader, num_epochs=pretrain_epoch)
+pretrain_epoch = 1
+resnet_pretrained, pretrain_losses, pretrain_accs, preval_losses, preval_accs, preval_elist \
+    = train_model(resnet34, criterion, optimizer_ft, exp_lr_scheduler, pretrain_dataloader, pretest_dataloader, num_epochs=pretrain_epoch)
 
 
-torch.save(resnet34.state_dict(), 'VGG16_pretrained_subset_seedlings.pt')
+torch.save(resnet34.state_dict(), 'resnet_pretrained_subset_seedlings.pt')
 
-np.save("pretrain_losses", np.array(pretrain_losses))
-np.save("pretrain_accs", np.array(pretrain_accs))
-np.save("preval_losses", np.array(preval_losses))
-np.save("preval_accs", np.array(preval_accs))
+pt_graph_loss = plt.plot(preval_elist, preval_losses, pretrain_losses)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+pt_graph_loss.figure.savefig('resPreLoss.png')
 
+pt_graph_acc = plt.plot(preval_elist, preval_accs, pretrain_accs)
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+pt_graph_acc.figure.savefig('resPreAcc.png')
 
 freeze_layers(resnet_pretrained, n_layers=28)
 
-pretrain_epoch = 30
-resnet_trained, train_losses, train_accs, val_losses, val_accs \
+resnet_trained, train_losses, train_accs, val_losses, val_accs, train_elist \
     = train_model(resnet_pretrained, criterion, optimizer_ft, exp_lr_scheduler, train_dataloader, test_dataloader, num_epochs=pretrain_epoch)
 
 
-torch.save(resnet34.state_dict(), 'VGG16_transer_trained_subset_seedlings.pt')
+torch.save(resnet34.state_dict(), 'resnet_transer_trained_subset_seedlings.pt')
 
-np.save("train_losses", np.array(train_losses))
-np.save("train_accs", np.array(train_accs))
-np.save("val_losses", np.array(val_losses))
-np.save("val_accs", np.array(val_accs))
+pt_graph_loss = plt.plot(train_elist, val_losses, train_losses)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.suptitle("ResNet34 Transfer Learing Loss")
+pt_graph_loss.savefig('resTransferLoss.png')
 
 
-eval_model(resnet_trained, criterion)
+pt_graph_acc = plt.plot(train_elist, val_accs, train_accs)
+plt.suptitle('ResNet34 Transfer Learning Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+pt_graph_acc.savefig('resTransferAcc.png')
+
+eval_model(resnet_trained, criterion, test_dataloader)
 
 

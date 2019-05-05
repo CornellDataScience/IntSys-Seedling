@@ -18,6 +18,7 @@ import torchvision.models as models
 from torchvision import datasets, transforms
 import os
 import matplotlib.pyplot as plt
+plt.switch_backend('Agg')
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import time
@@ -369,15 +370,18 @@ def train_model(vgg, criterion, optimizer, scheduler, train_acc, val_acc, epochs
     print("Best acc: {:.4f}".format(best_acc))
 
     vgg.load_state_dict(best_model_wts)
-    return vgg, train_acc, val_acc
+    return vgg, train_acc, val_acc, epochs
 
 #def plotRes():
     #graph1 = plt.plot()
 
-vgg16_trained, trainAccList, valAccList, epochList = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, [], [], [], num_epochs=200)
+vgg16_trained, trainAccList, valAccList, epoch_list = train_model(vgg16, criterion, optimizer_ft, exp_lr_scheduler, [], [], [], num_epochs=150)
 torch.save(vgg16.state_dict(), 'resnet_200.pt')
-plot = plt.plot(epochList, trainAccList, valAccList)
-plot.savefig('resAcc.png')
+fig = plt.plot( epoch_list, trainAccList, valAccList)
+plt.suptitle("ResNet34 Training Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+fig = plt.savefig('resAcc.png')
 
 
 

@@ -249,7 +249,7 @@ if use_gpu:
     resnet34.cuda() #.cuda() will move everything to the GPU side
 criterion = nn.CrossEntropyLoss()
 
-optimizer_ft = optim.SGD(resnet34.parameters(), lr=0.0001, momentum=0.9)
+optimizer_ft = optim.SGD(resnet34.parameters(), lr=0.005, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
 print("Test before training")
@@ -391,21 +391,13 @@ torch.save(resnet34.state_dict(), 'resnet_pretrained_subset_seedlings.pt')
 pt_graph_loss = plt.plot(preval_elist, preval_losses, pretrain_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
-<<<<<<< HEAD
 fig = plt.savefig('resPreLoss.png')
-=======
-plt.savefig('resPreLoss.png')
->>>>>>> d8e647979e72ffafaf439e3b4c3090e00ab711c3
 plt.clf()
 
 pt_graph_acc = plt.plot(preval_elist, preval_accs, pretrain_accs)
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-<<<<<<< HEAD
 fig = plt.savefig('resPreAcc.png')
-=======
-plt.savefig('resPreAcc.png')
->>>>>>> d8e647979e72ffafaf439e3b4c3090e00ab711c3
 plt.clf()
 
 freeze_layers(resnet_pretrained, n_layers=28)
@@ -420,32 +412,21 @@ pt_graph_loss = plt.plot(train_elist, val_losses, train_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.suptitle("ResNet34 Transfer Learing Loss")
-<<<<<<< HEAD
 fig = plt.savefig('resTransferLoss.png')
-=======
-plt.savefig('resTransferLoss.png')
->>>>>>> d8e647979e72ffafaf439e3b4c3090e00ab711c3
 plt.clf()
 
 pt_graph_acc = plt.plot(train_elist, val_accs, train_accs)
 plt.suptitle('ResNet34 Transfer Learning Accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-<<<<<<< HEAD
 fig = plt.savefig('resTransferAcc.png')
 plt.clf()
-
-
-=======
-plt.savefig('resTransferAcc.png')
-plt.clf()
->>>>>>> d8e647979e72ffafaf439e3b4c3090e00ab711c3
 
 
 res34_no_ptrain = models.resnet34(pretrained=True)
 
 freeze_layers(res34_no_ptrain, 30)
-n_inputs = resnet34.fc.in_features
+n_inputs = res34_no_ptrain.fc.in_features
 
 #create fully connected layer with 12 out features + activation layer + softmax
 res34_no_ptrain.fc = nn.Sequential(nn.Linear(n_inputs, 128),
@@ -455,6 +436,9 @@ res34_no_ptrain.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                       nn.BatchNorm1d(12),
                       nn.LeakyReLU(),
                       nn.LogSoftmax(dim = 1))
+
+if use_gpu:
+    res34_no_ptrain.cuda()
 
 res_noptrain, notrain_losses, notrain_accs, noval_losses, noval_accs, notrain_elist \
     = train_model(res34_no_ptrain, criterion, optimizer_ft, exp_lr_scheduler, train_dataloader, test_dataloader, num_epochs=pretrain_epoch)
@@ -468,13 +452,10 @@ plt.savefig('resNpoTransferLoss.png')
 plt.clf()
 
 nopt_graph_acc = plt.plot(notrain_elist,noval_accs, notrain_accs)
-plt.suptitle('ResNet34 Transfer Learning Accuracy Without Pretraining)
+plt.suptitle('ResNet34 Transfer Learning Accuracy Without Pretraining')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.savefig('resNoTransferAcc.png')
 
 
-
 eval_model(resnet_trained, criterion, test_dataloader)
-
-

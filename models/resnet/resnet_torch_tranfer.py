@@ -422,6 +422,28 @@ plt.ylabel('Accuracy')
 fig = plt.savefig('resTransferAcc.png')
 plt.clf()
 
+
+
+
+res34_no_ptrain = models.resnet34(pretrained=True)
+
+freeze_layers(res34_no_ptrain, 30)
+n_inputs = resnet34.fc.in_features
+
+#create fully connected layer with 12 out features + activation layer + softmax
+res34_no_ptrain.fc = nn.Sequential(nn.Linear(n_inputs, 128),
+                      nn.LeakyReLU(),
+                      nn.BatchNorm1d(128),
+                      nn.Linear(128, 12),
+                      nn.BatchNorm1d(12),
+                      nn.LeakyReLU(),
+                      nn.LogSoftmax(dim = 1))
+
+res_noptrain, train_losses, train_accs, val_losses, val_accs, train_elist \
+    = train_model(res34_no_ptrain, criterion, optimizer_ft, exp_lr_scheduler, train_dataloader, test_dataloader, num_epochs=pretrain_epoch)
+
+
+
 eval_model(resnet_trained, criterion, test_dataloader)
 
 

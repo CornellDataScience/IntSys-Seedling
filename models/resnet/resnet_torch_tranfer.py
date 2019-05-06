@@ -391,12 +391,14 @@ torch.save(resnet34.state_dict(), 'resnet_pretrained_subset_seedlings.pt')
 pt_graph_loss = plt.plot(preval_elist, preval_losses, pretrain_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
-pt_graph_loss.figure.savefig('resPreLoss.png')
+plt.savefig('resPreLoss.png')
+plt.clf()
 
 pt_graph_acc = plt.plot(preval_elist, preval_accs, pretrain_accs)
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-pt_graph_acc.figure.savefig('resPreAcc.png')
+plt.savefig('resPreAcc.png')
+plt.clf()
 
 freeze_layers(resnet_pretrained, n_layers=28)
 
@@ -410,16 +412,15 @@ pt_graph_loss = plt.plot(train_elist, val_losses, train_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.suptitle("ResNet34 Transfer Learing Loss")
-pt_graph_loss.savefig('resTransferLoss.png')
-
+plt.savefig('resTransferLoss.png')
+plt.clf()
 
 pt_graph_acc = plt.plot(train_elist, val_accs, train_accs)
 plt.suptitle('ResNet34 Transfer Learning Accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-pt_graph_acc.savefig('resTransferAcc.png')
-
-
+plt.savefig('resTransferAcc.png')
+plt.clf()
 
 
 res34_no_ptrain = models.resnet34(pretrained=True)
@@ -436,8 +437,22 @@ res34_no_ptrain.fc = nn.Sequential(nn.Linear(n_inputs, 128),
                       nn.LeakyReLU(),
                       nn.LogSoftmax(dim = 1))
 
-res_noptrain, train_losses, train_accs, val_losses, val_accs, train_elist \
+res_noptrain, notrain_losses, notrain_accs, noval_losses, noval_accs, notrain_elist \
     = train_model(res34_no_ptrain, criterion, optimizer_ft, exp_lr_scheduler, train_dataloader, test_dataloader, num_epochs=pretrain_epoch)
+
+
+nopt_graph_loss = plt.plot(notrain_elist, noval_losses, notrain_losses)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.suptitle("ResNet34 Transfer Learing Loss Without Pretraining")
+plt.savefig('resNpoTransferLoss.png')
+plt.clf()
+
+nopt_graph_acc = plt.plot(notrain_elist,noval_accs, notrain_accs)
+plt.suptitle('ResNet34 Transfer Learning Accuracy Without Pretraining)
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.savefig('resNoTransferAcc.png')
 
 
 

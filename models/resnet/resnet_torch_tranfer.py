@@ -381,7 +381,7 @@ def train_model(vgg, criterion, optimizer, scheduler, train_dataloader, test_dat
     return vgg, train_losses, train_accs, val_losses, val_accs, epochs
 
 
-pretrain_epoch = 1
+pretrain_epoch = 150
 resnet_pretrained, pretrain_losses, pretrain_accs, preval_losses, preval_accs, preval_elist \
     = train_model(resnet34, criterion, optimizer_ft, exp_lr_scheduler, pretrain_dataloader, pretest_dataloader, num_epochs=pretrain_epoch)
 
@@ -391,12 +391,14 @@ torch.save(resnet34.state_dict(), 'resnet_pretrained_subset_seedlings.pt')
 pt_graph_loss = plt.plot(preval_elist, preval_losses, pretrain_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
-pt_graph_loss.figure.savefig('resPreLoss.png')
+fig = plt.savefig('resPreLoss.png')
+plt.clf()
 
 pt_graph_acc = plt.plot(preval_elist, preval_accs, pretrain_accs)
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-pt_graph_acc.figure.savefig('resPreAcc.png')
+fig = plt.savefig('resPreAcc.png')
+plt.clf()
 
 freeze_layers(resnet_pretrained, n_layers=28)
 
@@ -410,14 +412,15 @@ pt_graph_loss = plt.plot(train_elist, val_losses, train_losses)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.suptitle("ResNet34 Transfer Learing Loss")
-pt_graph_loss.savefig('resTransferLoss.png')
-
+fig = plt.savefig('resTransferLoss.png')
+plt.clf()
 
 pt_graph_acc = plt.plot(train_elist, val_accs, train_accs)
 plt.suptitle('ResNet34 Transfer Learning Accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-pt_graph_acc.savefig('resTransferAcc.png')
+fig = plt.savefig('resTransferAcc.png')
+plt.clf()
 
 eval_model(resnet_trained, criterion, test_dataloader)
 
